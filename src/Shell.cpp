@@ -5,7 +5,7 @@
 #include <iomanip>
 using namespace std;
 
-void Func_Dir()
+void Shell::Func_Dir()
 {
     const unsigned int time_len = 25;
     const unsigned int type_len = 15;
@@ -20,9 +20,19 @@ void Func_Dir()
     // ......
 }
 
+void Shell::Func_Exit()
+{
+    cout << "Exit!" << endl;
+    this->flag = false;
+}
+void Shell::Init_Command_Exec()
+{
+    this->command_exec[string("dir")] = &Shell::Func_Dir;
+    this->command_exec[string("exit")] = &Shell::Func_Exit;
+}
+
 void Shell::Prompt()
 {
-    // string user_name = "vw";
     string work_directory = "/usr/local/bin";
     printf("# %s in %s\n$ ", this->usr_name.c_str(), work_directory.c_str());
 }
@@ -37,29 +47,36 @@ void Shell::Get_Command()
     }
     string command;
     getline(cin, command);
+
     string buf;
+
     stringstream s(command);
     while (s >> buf)
     {
         transform(buf.begin(), buf.end(), buf.begin(), ::tolower);
         this->args.push_back(buf);
     }
-    // for (auto arg : this->args)
-    // {
-    //     cout << arg << endl;
-    // }
 }
 
 void Shell::Execute()
 {
-    if (this->args[0] == "exit")
+    if (this->args.size() < 1)
     {
-        cout << "Exit!" << endl;
-        this->flag = false;
+        return;
     }
-    else if (this->args[0] == "dir")
+    else
     {
-        Func_Dir();
+        string command_name = this->args[0];
+        if (this->command_exec.count(command_name) == 0)
+        {
+            cout << "Wrong Instruction!" << endl;
+        }
+        else
+        {
+            void (Shell::*func_ptr)(void);
+            func_ptr = this->command_exec[command_name];
+            (this->*func_ptr)();
+        }
     }
 }
 
@@ -105,6 +122,7 @@ void Shell::Run()
     }
 
     this->flag = true;
+    this->Init_Command_Exec();
     while (1)
     {
         this->Prompt();
@@ -116,5 +134,3 @@ void Shell::Run()
         }
     }
 }
-
-// 2022/5/9 21.01

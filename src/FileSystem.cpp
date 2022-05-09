@@ -111,5 +111,3 @@ void FileSystem::Free_Block(unsigned int block_num)
         p_stk = 1;
     }
 }
-
-//This is just for test.
