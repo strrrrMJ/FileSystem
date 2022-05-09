@@ -33,7 +33,7 @@ void FileSystem::Init_All_Free_Blocks()
     std::cout << "Enter init all free blocks" << std::endl;
     while (p_data < TOTAL_BLOCK_NUM)
     {
-        if (p_stk < 50)
+        if (p_stk < MAX_NFREE)
         {
             stack[p_stk++] = p_data++;
         }
@@ -111,3 +111,5 @@ void FileSystem::Free_Block(unsigned int block_num)
         p_stk = 1;
     }
 }
+
+//This is just for test.
