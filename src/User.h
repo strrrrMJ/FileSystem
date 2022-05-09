@@ -5,6 +5,8 @@ class User
 {
 public:
     int x;
+    int y;
+    int z;
 };
 
 #endif
