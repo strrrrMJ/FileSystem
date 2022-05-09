@@ -36,7 +36,7 @@ void Shell::Get_Command()
         len--;
     }
     string command;
-    cin >> command;
+    getline(cin, command);
     string buf;
     stringstream s(command);
     while (s >> buf)
@@ -76,9 +76,9 @@ void Shell::Run()
         string usr;
         string psw;
         cout << "Input Your ID: ";
-        cin >> usr;
+        getline(cin, usr);
         cout << "Input Password: ";
-        cin >> psw;
+        getline(cin, psw);
         if (usr == "root")
         {
             if (psw == "root")
