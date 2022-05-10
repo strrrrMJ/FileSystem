@@ -31,7 +31,7 @@ void FileSystem::Init_All_Free_Blocks()
 {
     unsigned int *stack = g_superblock.s_free;
     unsigned int &p_stk = g_superblock.s_nfree;
-    int p_data = DATA_BLOCK_START_INDEX;
+    int p_data = DATA_BLOCK_START_INDEX + 1;
     std::cout << "Enter init all free blocks" << std::endl;
     while (p_data < TOTAL_BLOCK_NUM)
     {
@@ -50,7 +50,7 @@ void FileSystem::Init_All_Free_Blocks()
 
 void FileSystem::Init_BitMap()
 {
-    unsigned int bitmap[INODE_NUM] = {0};
+    unsigned int bitmap[INODE_NUM] = {1};
     DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE, (char *)bitmap, BITMAP_SIZE);
 }
 

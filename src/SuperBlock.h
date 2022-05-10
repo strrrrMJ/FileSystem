@@ -5,7 +5,7 @@ static const unsigned int MAX_NFREE = 100;
 
 class SuperBlock
 {
-private:
+public:
     unsigned short s_inode_num; // Total number of inodes
     unsigned short s_free_inode_num;
     unsigned int s_total_block_num; // Total number of blocks

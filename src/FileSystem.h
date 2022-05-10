@@ -30,19 +30,26 @@ class FileSystem
 private:
 
     static void Load_SuperBlock();
+   
     static void Store_SuperBlock();
-
+    
     static void Init_SuperBlock();
+    
     static void Init_All_Free_Blocks();
+    
     static void Init_BitMap();
 
     static void Free_Inode(unsigned int inode_num);
+    
     static unsigned int Allocate_Inode();
 
 public:
+    
     static void Format_Disk();
+    
     // Return the block_num
     static unsigned int Allocate_Block();
+   
     static void Free_Block(unsigned int block_num);
 
 public:
