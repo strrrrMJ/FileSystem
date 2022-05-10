@@ -12,14 +12,14 @@
 void Func_Exit();
 class Shell
 {
-private:
+public:
     Directory current_dirrectory;
     std::vector<std::string> args;
     bool flag;
     std::string usr_name;
     std::map<std::string, void (Shell::*)(void)> command_exec;
 
-private:
+public:
     void Prompt();
     void Get_Command();
     void Execute();
