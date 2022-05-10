@@ -27,7 +27,7 @@ static const unsigned int DISK_SIZE = (TOTAL_BLOCK_NUM * BLOCK_SIZE) / (1024 * 1
 
 class FileSystem
 {
-private:
+public:
 
     static void Load_SuperBlock();
    
@@ -43,14 +43,16 @@ private:
     
     static unsigned int Allocate_Inode();
 
-public:
-    
     static void Format_Disk();
     
     // Return the block_num
     static unsigned int Allocate_Block();
    
     static void Free_Block(unsigned int block_num);
+
+    static void Load_Inode(Inode& inode,unsigned int inode_pos);
+    
+    static void Store_Inode(Inode& inode,unsigned int inode_pos);
 
 public:
     friend class FileManager;
