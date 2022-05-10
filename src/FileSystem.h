@@ -28,23 +28,25 @@ static const unsigned int DISK_SIZE = (TOTAL_BLOCK_NUM * BLOCK_SIZE) / (1024 * 1
 class FileSystem
 {
 private:
-    SuperBlock super_block;
 
-    void Load_SuperBlock();
-    void Store_SuperBlock();
+    static void Load_SuperBlock();
+    static void Store_SuperBlock();
 
-    void Init_SuperBlock();
-    void Init_All_Free_Blocks();
-    void Init_BitMap();
+    static void Init_SuperBlock();
+    static void Init_All_Free_Blocks();
+    static void Init_BitMap();
 
-    void Free_Inode(unsigned int inode_num);
-    unsigned int Allocate_Inode();
+    static void Free_Inode(unsigned int inode_num);
+    static unsigned int Allocate_Inode();
 
 public:
-    void Format_Disk();
+    static void Format_Disk();
     // Return the block_num
-    unsigned int Allocate_Block();
-    void Free_Block(unsigned int block_num);
+    static unsigned int Allocate_Block();
+    static void Free_Block(unsigned int block_num);
+
+public:
+    friend class FileManager;
 };
 
 #endif

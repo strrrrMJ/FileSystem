@@ -2,33 +2,35 @@
 
 #include "iostream"
 
+SuperBlock g_superblock;
+
 void FileSystem::Load_SuperBlock()
 {
-    DiskDriver::Read(SUPER_BLOCK_INDEX * BLOCK_SIZE, (char *)&(this->super_block), sizeof(SuperBlock));
+    DiskDriver::Read(SUPER_BLOCK_INDEX * BLOCK_SIZE, (char *)&g_superblock, sizeof(SuperBlock));
 }
 
 void FileSystem::Store_SuperBlock()
 {
-    DiskDriver::Write(SUPER_BLOCK_INDEX * BLOCK_SIZE, (char *)&(this->super_block), sizeof(SuperBlock));
+    DiskDriver::Write(SUPER_BLOCK_INDEX * BLOCK_SIZE, (char *)&g_superblock, sizeof(SuperBlock));
 }
 
 void FileSystem::Init_SuperBlock()
 {
 
-    super_block.s_inode_num = INODE_NUM;
-    super_block.s_free_inode_num = INODE_NUM;
+    g_superblock.s_inode_num = INODE_NUM;
+    g_superblock.s_free_inode_num = INODE_NUM;
 
-    super_block.s_total_block_num = TOTAL_BLOCK_NUM;
-    super_block.s_free_block_num = TOTAL_BLOCK_NUM;
+    g_superblock.s_total_block_num = TOTAL_BLOCK_NUM;
+    g_superblock.s_free_block_num = TOTAL_BLOCK_NUM;
 
-    super_block.s_nfree = 1; // Init with 1
-    super_block.s_free[0] = -1;
+    g_superblock.s_nfree = 1; // Init with 1
+    g_superblock.s_free[0] = -1;
 }
 
 void FileSystem::Init_All_Free_Blocks()
 {
-    unsigned int *stack = super_block.s_free;
-    unsigned int &p_stk = super_block.s_nfree;
+    unsigned int *stack = g_superblock.s_free;
+    unsigned int &p_stk = g_superblock.s_nfree;
     int p_data = DATA_BLOCK_START_INDEX;
     std::cout << "Enter init all free blocks" << std::endl;
     while (p_data < TOTAL_BLOCK_NUM)
@@ -41,15 +43,9 @@ void FileSystem::Init_All_Free_Blocks()
         {
             DiskDriver::Write(p_data * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
             stack[0] = p_data++;
-            super_block.s_nfree = 1;
+            g_superblock.s_nfree = 1;
         }
     }
-    // std::cout << "p_data: " << p_data << std::endl;
-    // std::cout << "s_nfree: " << p_stk << std::endl;
-    // std::cout << TOTAL_BLOCK_NUM << std::endl;
-    // std::cout << TOTAL_BLOCK_NUM - DATA_BLOCK_START_INDEX << std::endl;
-    // std::cout << DATA_BLOCK_NUM << std::endl;
-    // std::cout << DATA_BLOCK_NUM % BLOCK_SIZE << std::endl;
 }
 
 void FileSystem::Init_BitMap()
@@ -64,21 +60,21 @@ void FileSystem::Format_Disk()
     {
         throw "DISK DOES NOT EXIST";
     }
-    this->Init_SuperBlock();
+    Init_SuperBlock();
 
-    this->Init_All_Free_Blocks();
+    Init_All_Free_Blocks();
 
-    this->Init_BitMap();
+    Init_BitMap();
 
-    this->Store_SuperBlock();
+    Store_SuperBlock();
 }
 
 unsigned int FileSystem::Allocate_Block()
 {
     unsigned int res;
 
-    unsigned int *stack = super_block.s_free;
-    unsigned int &p_stk = super_block.s_nfree;
+    unsigned int *stack = g_superblock.s_free;
+    unsigned int &p_stk = g_superblock.s_nfree;
 
     if (p_stk > 1)
     {
@@ -90,15 +86,15 @@ unsigned int FileSystem::Allocate_Block()
         DiskDriver::Read(res * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
     }
 
-    this->Store_SuperBlock();
+    Store_SuperBlock();
 
     return res;
 }
 
 void FileSystem::Free_Block(unsigned int block_num)
 {
-    unsigned int *stack = super_block.s_free;
-    unsigned int &p_stk = super_block.s_nfree;
+    unsigned int *stack = g_superblock.s_free;
+    unsigned int &p_stk = g_superblock.s_nfree;
 
     if (p_stk < MAX_NFREE)
     {
@@ -115,7 +111,7 @@ void FileSystem::Free_Block(unsigned int block_num)
 unsigned int FileSystem::Allocate_Inode()
 {
     Load_SuperBlock();
-    if (super_block.s_free_inode_num == 0)
+    if (g_superblock.s_free_inode_num == 0)
     {
         throw "OUT OF INODE!";
     }
@@ -127,7 +123,7 @@ unsigned int FileSystem::Allocate_Inode()
         {
             if (bitmap[i] == 0)
             {
-                super_block.s_free_inode_num--;
+                g_superblock.s_free_inode_num--;
                 unsigned int tmp = 1;
                 DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE + i * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
                 Store_SuperBlock();
@@ -140,7 +136,7 @@ unsigned int FileSystem::Allocate_Inode()
 
 void FileSystem::Free_Inode(unsigned int inode_num)
 {
-    super_block.s_free_inode_num++;
+    g_superblock.s_free_inode_num++;
     unsigned int tmp = 0;
     DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE + inode_num * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
     Store_SuperBlock();
