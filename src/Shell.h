@@ -33,10 +33,12 @@ private:
     void Func_Close();
     void Func_Open();
 
+    void Parse_Path(std::string, std::vector<std::string> &);
+
 public:
     void Run();
 };
 
-unsigned int Get_Inode_Num(std::vector<std::string>, unsigned int);
+unsigned int Get_Inode_Num(std::vector<std::string> &, unsigned int);
 
 #endif
