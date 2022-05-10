@@ -178,6 +178,7 @@ void Shell::Parse_Path(string path_string, vector<string> &path)
     {
         complete_path = path_string;
     }
+
     vector<string> res;
     res.push_back(string("root"));
 
