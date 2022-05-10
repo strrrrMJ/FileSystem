@@ -14,7 +14,7 @@ static const unsigned int TER_PTR_NUM = 2;
 
 class Inode
 {
-private:
+public:
     enum Mode
     {
         IsDir = 0x1,
@@ -52,7 +52,6 @@ private:
     time_t i_time; // last modified time
 
 public:
-
     // file offset to disk index (byte as unit)
     static unsigned int Offset_To_Index(unsigned int offset);
 

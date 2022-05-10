@@ -18,6 +18,7 @@ public:
     bool flag;
     std::string usr_name;
     std::map<std::string, void (Shell::*)(void)> command_exec;
+    std::string current_path;
 
 public:
     void Prompt();

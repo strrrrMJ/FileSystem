@@ -136,10 +136,62 @@ void Shell::Run()
     }
 }
 
-unsigned int Get_Inode_Num(std::vector<std::string>, unsigned int begin_inode_num = 0)
+// >= 0: vliad
+// == -1: invalid, this file or directory does not exist
+unsigned int Get_Inode_Num(vector<string> &path, unsigned int begin_inode_num = 0)
 {
-    Inode inode;
-    DiskDriver::Read(INODE_START_INDEX * BLOCK_SIZE + begin_inode_num * INODE_SIZE, (char *)&inode, INODE_SIZE);
-
-    unsigned int root_inode_num = 0;
+    if (path.size() == 0)
+    {
+        return begin_inode_num;
+    }
+    else
+    {
+        Inode inode;
+        DiskDriver::Read(INODE_START_INDEX * BLOCK_SIZE + begin_inode_num * INODE_SIZE, (char *)&inode, sizeof(Inode));
+        unsigned int block_num = inode.i_addr[0];
+        Directory directory;
+        DiskDriver::Read(DATA_BLOCK_START_INDEX * BLOCK_SIZE + block_num * BLOCK_SIZE, (char *)&directory, sizeof(Directory));
+        for (unsigned int i = 0; i < inode.i_size; i++)
+        {
+            if (string(directory.d_filename[i]) == path[0])
+            {
+                vector<string>::iterator k = path.begin();
+                path.erase(k);
+                unsigned int res = Get_Inode_Num(path, directory.d_inode_num[i]);
+                return res;
+            }
+        }
+        return -1; // Does Not Exit
+    }
 }
+
+// Make sure path_string.length() > 0
+void Shell::Parse_Path(string path_string, vector<string> &path)
+{
+    // path example: /usr/psw
+    string complete_path;
+    if (path_string[0] != '/')
+    {
+        complete_path = this->current_path + "/" + path_string;
+    }
+    else
+    {
+        complete_path = path_string;
+    }
+    vector<string> res;
+    res.push_back(string("root"));
+
+    stringstream ss(complete_path);
+    string item;
+    while (getline(ss, item, '/'))
+    {
+        if (!item.empty())
+        {
+            res.push_back(item);
+        }
+    }
+    path = res;
+}
+
+// parse
+// mkdir, open
