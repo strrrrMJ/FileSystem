@@ -85,9 +85,8 @@ bool Shell::Is_Over()
     return !this->flag;
 }
 
-void Shell::Run()
+void Shell::Log_In()
 {
-    bool login = false;
     while (1)
     {
         string usr;
@@ -100,27 +99,28 @@ void Shell::Run()
         {
             if (psw == "root")
             {
-                login = true;
+                this->usr_name = usr;
+                break;
             }
         }
         else if (usr == "Bob")
         {
             if (psw == "123456")
             {
-                login = true;
+                this->usr_name = usr;
+                break;
             }
         }
-        if (login)
-        {
-            this->usr_name = usr;
-            break;
-        }
-        else
-        {
-            cout << "Please Check Your ID and Password, and Try Again!" << endl;
-        }
+        cout << "Please Check Your ID and Password, and Try Again!" << endl;
     }
+}
 
+void Shell::Run()
+{
+    FileSystem filesystem;
+    filesystem.Format_Disk();
+
+    this->Log_In();
     this->flag = true;
     this->Init_Command_Exec();
     while (1)

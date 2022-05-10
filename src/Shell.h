@@ -3,6 +3,7 @@
 
 #include "Directory.h"
 #include "User.h"
+#include "FileSystem.h"
 
 #include <vector>
 #include <string>
@@ -24,6 +25,7 @@ private:
     void Execute();
     bool Is_Over();
     void Init_Command_Exec();
+    void Log_In();
 
     void Func_Dir();
     void Func_Exit();
