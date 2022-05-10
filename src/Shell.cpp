@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <time.h>
+#include <string.h>
 using namespace std;
 extern FileSystem g_filesystem;
 void Shell::Func_Ls()
@@ -17,8 +18,36 @@ void Shell::Func_Ls()
     cout << setw(size_len) << "Size(Byte)";
     cout << setw(name_len) << "Name";
     cout << endl;
-    // 每行输出文件/目录信息
-    // ......
+    Inode inode;
+    vector<string> path;
+    Parse_Path(current_path, path);
+    int dir_inode_num = Get_Inode_Num(path);
+    FileSystem::Load_Inode(inode, dir_inode_num);
+    Directory dir;
+    DiskDriver::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+    for (unsigned int i = 0; i < inode.i_size; i++)
+    {
+        Inode sub_dir_inode;
+        unsigned int sub_dir_inode_num = dir.d_inode_num[i];
+        FileSystem::Load_Inode(sub_dir_inode, sub_dir_inode_num);
+        time_t time = sub_dir_inode.i_time;
+        unsigned short mode = sub_dir_inode.i_mode;
+        unsigned short size = sub_dir_inode.i_size;
+        char *time_str = asctime(gmtime(&time));
+        time_str[strlen(time_str) - 1] = 0;
+        cout << setw(time_len) << time_str;
+        cout << setw(type_len);
+        if (mode == 1)
+        {
+            cout << "DIR" << setw(size_len) << "";
+        }
+        else
+        {
+            cout << "FILE" << setw(size_len) << size;
+        }
+        cout << setw(name_len) << dir.d_filename[i];
+        cout << endl;
+    }
 }
 
 void Shell::Func_Exit()
@@ -173,6 +202,3 @@ void Shell::Parse_Path(string path_string, vector<string> &path)
     }
     path = res;
 }
-
-// parse
-// mkdir, open

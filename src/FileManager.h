@@ -30,6 +30,6 @@ public:
 
     // void Edit_File_Permission();
 };
-int Get_Inode_Num(std::vector<std::string> &, int);
+int Get_Inode_Num(std::vector<std::string> &, int = -1);
 
 #endif

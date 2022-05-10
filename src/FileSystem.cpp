@@ -74,8 +74,8 @@ void FileSystem::Init_Root()
     Directory dir;
     dir.d_inode_num[0] = 0;
     dir.d_inode_num[1] = 0;
-    memcpy(dir.d_filename[0], ".", 0);
-    memcpy(dir.d_filename[1], "..", 0);
+    strcpy(dir.d_filename[0], ".");
+    strcpy(dir.d_filename[1], "..");
     DiskDriver::Write(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
 
     FileSystem::Store_Inode(inode, 0);
