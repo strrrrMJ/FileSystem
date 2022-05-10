@@ -147,7 +147,7 @@ unsigned int Get_Inode_Num(vector<string> &path, unsigned int begin_inode_num = 
     else
     {
         Inode inode;
-        DiskDriver::Read(INODE_START_INDEX * BLOCK_SIZE + begin_inode_num * INODE_SIZE, (char *)&inode, sizeof(Inode));
+        FileSystem::Load_Inode(inode, begin_inode_num);
         unsigned int block_num = inode.i_addr[0];
         Directory directory;
         DiskDriver::Read(DATA_BLOCK_START_INDEX * BLOCK_SIZE + block_num * BLOCK_SIZE, (char *)&directory, sizeof(Directory));
