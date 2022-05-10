@@ -15,7 +15,7 @@ unsigned int Inode::Offset_To_Index(unsigned int offset)
         unsigned int first_index = (block_cnt - DIRECT_PTR_NUM) / PTR_IN_BLOCK_NUM + DIRECT_PTR_NUM;
         unsigned int second_index = (block_cnt - DIRECT_PTR_NUM) % PTR_IN_BLOCK_NUM;
         unsigned int index_table[PTR_IN_BLOCK_NUM];
-        DiskDriver::Read(DATA_BLOCK_START_INDEX + i_addr[first_index] * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
+        DiskDriver::Read(i_addr[first_index] * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
         return index_table[second_index];
     }
     else if (block_cnt < DIRECT_PTR_NUM + SEC_PTR_NUM * PTR_IN_BLOCK_NUM + TER_PTR_NUM * PTR_IN_BLOCK_NUM * PTR_IN_BLOCK_NUM)
@@ -24,9 +24,9 @@ unsigned int Inode::Offset_To_Index(unsigned int offset)
         unsigned int second_index = (block_cnt - DIRECT_PTR_NUM - SEC_PTR_NUM * PTR_IN_BLOCK_NUM - PTR_IN_BLOCK_NUM * PTR_IN_BLOCK_NUM * (first_index - DIRECT_PTR_NUM - SEC_PTR_NUM)) / PTR_IN_BLOCK_NUM;
         unsigned int third_index = (block_cnt - DIRECT_PTR_NUM - SEC_PTR_NUM * PTR_IN_BLOCK_NUM) % PTR_IN_BLOCK_NUM;
         unsigned int index_table[PTR_IN_BLOCK_NUM];
-        DiskDriver::Read(DATA_BLOCK_START_INDEX + i_addr[first_index] * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
+        DiskDriver::Read(i_addr[first_index] * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
         unsigned int second_block_no = index_table[second_index];
-        DiskDriver::Read(DATA_BLOCK_START_INDEX + second_block_no * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
+        DiskDriver::Read(second_block_no * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
         return index_table[third_index];
     }
     else

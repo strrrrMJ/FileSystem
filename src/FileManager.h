@@ -4,6 +4,7 @@
 #include "File.h"
 
 #include <string>
+#include <vector>
 
 class FileManager
 {
@@ -11,9 +12,9 @@ private:
     bool Dir_Name_Conflict(std::string dir_name);
 
 public:
-    static void Create_Dir(std::string dir_name);
+    static void Create_Dir(std::vector<std::string> &);
 
-    static void Romove_Dir(std::string dir_name);
+    static void Remove_Dir(std::string dir_name);
 
     static std::string Current_Dir();
 
@@ -29,5 +30,6 @@ public:
 
     // void Edit_File_Permission();
 };
+int Get_Inode_Num(std::vector<std::string> &, int);
 
 #endif

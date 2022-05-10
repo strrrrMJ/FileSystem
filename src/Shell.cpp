@@ -6,7 +6,7 @@
 #include <time.h>
 using namespace std;
 extern FileSystem g_filesystem;
-void Shell::Func_Dir()
+void Shell::Func_Ls()
 {
     const unsigned int time_len = 25;
     const unsigned int type_len = 15;
@@ -26,10 +26,19 @@ void Shell::Func_Exit()
     cout << "Exit!" << endl;
     this->flag = false;
 }
+
+void Shell::Func_Mkdir()
+{
+    vector<string> path;
+    Parse_Path(args[1], path);
+    FileManager::Create_Dir(path);
+}
+
 void Shell::Init_Command_Exec()
 {
-    this->command_exec[string("dir")] = &Shell::Func_Dir;
+    this->command_exec[string("ls")] = &Shell::Func_Ls;
     this->command_exec[string("exit")] = &Shell::Func_Exit;
+    this->command_exec[string("mkdir")] = &Shell::Func_Mkdir;
 }
 
 void Shell::Prompt()
@@ -118,7 +127,7 @@ void Shell::Log_In()
 
 void Shell::Run()
 {
-
+    current_path = "/";
     g_filesystem.Format_Disk();
 
     this->Log_In();
@@ -133,35 +142,6 @@ void Shell::Run()
         {
             break;
         }
-    }
-}
-
-// >= 0: vliad
-// == -1: invalid, this file or directory does not exist
-unsigned int Get_Inode_Num(vector<string> &path, unsigned int begin_inode_num = 0)
-{
-    if (path.size() == 0)
-    {
-        return begin_inode_num;
-    }
-    else
-    {
-        Inode inode;
-        FileSystem::Load_Inode(inode, begin_inode_num);
-        unsigned int block_num = inode.i_addr[0];
-        Directory directory;
-        DiskDriver::Read(DATA_BLOCK_START_INDEX * BLOCK_SIZE + block_num * BLOCK_SIZE, (char *)&directory, sizeof(Directory));
-        for (unsigned int i = 0; i < inode.i_size; i++)
-        {
-            if (string(directory.d_filename[i]) == path[0])
-            {
-                vector<string>::iterator k = path.begin();
-                path.erase(k);
-                unsigned int res = Get_Inode_Num(path, directory.d_inode_num[i]);
-                return res;
-            }
-        }
-        return -1; // Does Not Exit
     }
 }
 

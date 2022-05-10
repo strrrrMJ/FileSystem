@@ -1,7 +1,8 @@
 #include "FileSystem.h"
 
-#include "iostream"
-
+#include <iostream>
+#include <cstdint>
+#include <cstring>
 SuperBlock g_superblock;
 
 void FileSystem::Load_SuperBlock()
@@ -54,6 +55,32 @@ void FileSystem::Init_BitMap()
     DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE, (char *)bitmap, BITMAP_SIZE);
 }
 
+void FileSystem::Init_Root()
+{
+    Inode inode;
+    inode.i_size = 2;
+    inode.i_mode = 1;
+    inode.i_number = 0;
+    inode.i_count = 0;
+    inode.i_permission = 0;
+    inode.i_uid = 0;
+    inode.i_gid = 0;
+    time_t t;
+    time(&t);
+    inode.i_time = t;
+
+    inode.i_addr[0] = DATA_BLOCK_START_INDEX;
+
+    Directory dir;
+    dir.d_inode_num[0] = 0;
+    dir.d_inode_num[1] = 0;
+    memcpy(dir.d_filename[0], ".", 0);
+    memcpy(dir.d_filename[1], "..", 0);
+    DiskDriver::Write(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+
+    FileSystem::Store_Inode(inode, 0);
+}
+
 void FileSystem::Format_Disk()
 {
     if (DiskDriver::Exists() == false)
@@ -65,6 +92,8 @@ void FileSystem::Format_Disk()
     Init_All_Free_Blocks();
 
     Init_BitMap();
+
+    Init_Root();
 
     Store_SuperBlock();
 }

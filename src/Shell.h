@@ -4,6 +4,7 @@
 #include "Directory.h"
 #include "User.h"
 #include "FileSystem.h"
+#include "FileManager.h"
 
 #include <vector>
 #include <string>
@@ -28,8 +29,9 @@ public:
     void Init_Command_Exec();
     void Log_In();
 
-    void Func_Dir();
+    void Func_Ls();
     void Func_Exit();
+    void Func_Mkdir();
     void Func_Create();
     void Func_Close();
     void Func_Open();
@@ -39,7 +41,5 @@ public:
 public:
     void Run();
 };
-
-unsigned int Get_Inode_Num(std::vector<std::string> &, unsigned int);
 
 #endif
