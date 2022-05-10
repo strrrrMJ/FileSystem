@@ -141,3 +141,13 @@ void FileSystem::Free_Inode(unsigned int inode_num)
     DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE + inode_num * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
     Store_SuperBlock();
 }
+
+void FileSystem::Load_Inode(Inode &inode, unsigned int inode_pos)
+{
+    DiskDriver::Read(INODE_START_INDEX * BLOCK_SIZE + inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+}
+
+void FileSystem::Store_Inode(Inode &inode, unsigned int inode_pos)
+{
+    DiskDriver::Write(INODE_START_INDEX * BLOCK_SIZE + inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+}
