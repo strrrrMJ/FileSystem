@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <iomanip>
 using namespace std;
-
+extern FileSystem g_filesystem;
 void Shell::Func_Dir()
 {
     const unsigned int time_len = 25;
@@ -117,8 +117,8 @@ void Shell::Log_In()
 
 void Shell::Run()
 {
-    FileSystem filesystem;
-    filesystem.Format_Disk();
+
+    g_filesystem.Format_Disk();
 
     this->Log_In();
     this->flag = true;

@@ -73,7 +73,7 @@ void FileSystem::Format_Disk()
     this->Store_SuperBlock();
 }
 
-int FileSystem::Allocate_Block()
+unsigned int FileSystem::Allocate_Block()
 {
     unsigned int res;
 
@@ -110,4 +110,38 @@ void FileSystem::Free_Block(unsigned int block_num)
         stack[0] = block_num;
         p_stk = 1;
     }
+}
+
+unsigned int FileSystem::Allocate_Inode()
+{
+    Load_SuperBlock();
+    if (super_block.s_free_inode_num == 0)
+    {
+        throw "OUT OF INODE!";
+    }
+    else
+    {
+        unsigned int bitmap[INODE_NUM];
+        DiskDriver::Read(BITMAP_START_INDEX * BLOCK_SIZE, (char *)bitmap, BITMAP_SIZE);
+        for (unsigned int i = 0; i < INODE_NUM; i++)
+        {
+            if (bitmap[i] == 0)
+            {
+                super_block.s_free_inode_num--;
+                unsigned int tmp = 1;
+                DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE + i * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
+                Store_SuperBlock();
+                return i;
+            }
+        }
+    }
+    return -1; // 正常情况下, 不会在这里返回
+}
+
+void FileSystem::Free_Inode(unsigned int inode_num)
+{
+    super_block.s_free_inode_num++;
+    unsigned int tmp = 0;
+    DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE + inode_num * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
+    Store_SuperBlock();
 }
