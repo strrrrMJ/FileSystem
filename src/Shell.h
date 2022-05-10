@@ -37,4 +37,6 @@ public:
     void Run();
 };
 
+unsigned int Get_Inode_Num(std::vector<std::string>, unsigned int);
+
 #endif

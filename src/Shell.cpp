@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <time.h>
 using namespace std;
 extern FileSystem g_filesystem;
 void Shell::Func_Dir()
@@ -133,4 +134,12 @@ void Shell::Run()
             break;
         }
     }
+}
+
+unsigned int Get_Inode_Num(std::vector<std::string>, unsigned int begin_inode_num = 0)
+{
+    Inode inode;
+    DiskDriver::Read(INODE_START_INDEX * BLOCK_SIZE + begin_inode_num * INODE_SIZE, (char *)&inode, INODE_SIZE);
+
+    unsigned int root_inode_num = 0;
 }
