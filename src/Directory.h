@@ -6,7 +6,7 @@ static const int MAX_FILE_NAME = 32;
 
 class Directory
 {
-private:
+public:
 
     unsigned int d_inode_num[MAX_SUB_DIR_NUM];
 
