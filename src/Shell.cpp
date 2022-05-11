@@ -8,6 +8,58 @@
 using namespace std;
 extern FileSystem g_filesystem;
 
+void Shell::Recursive_Helper_Of_Func_Tree(int depth, vector<string> &path)
+{
+    // Get the inode
+    vector<string> path_temp = path;
+    unsigned int inode_num = Get_Inode_Num(path_temp);
+    Inode inode;
+    FileSystem::Load_Inode(inode, inode_num); // No modifying, no storing
+
+    // Get the directory's content
+    Directory dir;
+    unsigned int blkno = inode.i_addr[0];
+    DiskDriver::Read(blkno * BLOCK_SIZE, (char *)&dir, sizeof(Directory)); // No modifying, no storing
+
+    // Traverse subdirectories or files
+    for (int i = 2; i < inode.i_size; i++)
+    {
+        for (int j = 0; j < depth; j++)
+        {
+            cout << "    ";
+        }
+        cout<<"|___";
+
+        string entry_name(dir.d_filename[i]);
+        cout << entry_name << endl;
+
+        if (inode.i_mode == 1)
+        {
+            path.push_back(entry_name);
+            Recursive_Helper_Of_Func_Tree(depth + 1, path);
+            path.pop_back();
+        }
+    }
+}
+
+void Shell::Func_Tree()
+{
+    cout << "." << endl;
+    if (args.size() == 1)
+    {
+        vector<string> cur_path_vec;
+        Parse_Path(current_path, cur_path_vec);
+        Recursive_Helper_Of_Func_Tree(0, cur_path_vec);
+    }
+    else if (args[1] == "-L")
+    {
+    }
+    else
+    {
+        cout << "Illegal Arguments! Please Read The Help Info!" << endl;
+    }
+}
+
 void Shell::Func_Ls()
 {
     const unsigned int time_len = 25;
@@ -223,12 +275,11 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("rm")] = &Shell::Func_Rm;
     this->command_exec[string("write")] = &Shell::Func_Write;
     this->command_exec[string("read")] = &Shell::Func_Read;
-
-    this->command_exec[string("help")] = &Shell::Func_help;
-
+    this->command_exec[string("help")] = &Shell::Func_Help;
     this->command_exec[string("open")] = &Shell::Func_Open;
     this->command_exec[string("openlist")] = &Shell::Func_Openlist;
     this->command_exec[string("close")] = &Shell::Func_Close;
+    this->command_exec[string("tree")] = &Shell::Func_Tree;
 }
 
 void Shell::Prompt()
@@ -323,9 +374,9 @@ void Shell::Run()
         DiskDriver::Create_Disk();
     }
 
-    cout<<endl;
-    cout<<"Welcome To Virtual Unix File System!"<<endl;
-    cout<<endl;
+    cout << endl;
+    cout << "Welcome To Virtual Unix File System!" << endl;
+    cout << endl;
 
     current_path = "/";
     cout << "Erase All Data And Format The Disk?(y/n): ";
@@ -403,6 +454,6 @@ void Shell::Transform_Path(vector<string> &path_t, vector<string> &path)
     }
 }
 
-void Shell::Func_help()
+void Shell::Func_Help()
 {
 }
