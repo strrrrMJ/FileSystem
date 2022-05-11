@@ -43,7 +43,7 @@ public:
 
     unsigned short i_number; // The number of Inode
 
-    unsigned short i_mode; // Directroy or File
+    unsigned short i_mode; // Directroy(1) or File(0)
 
     unsigned short i_permission;
 

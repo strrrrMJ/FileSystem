@@ -1,9 +1,25 @@
 #include "FileSystem.h"
+#include "FileManager.h"
 
 #include <iostream>
 #include <cstdint>
 #include <cstring>
+#include <vector>
+
+using namespace std;
+
 SuperBlock g_superblock;
+
+void FileSystem::Init_Some_Dir()
+{
+    vector<string> list = {"Users", "bin", "dev", "opt", "sbin", "tmp", "usr", "var"};
+    for (auto i : list)
+    {
+        vector<string> path = {"root"};
+        path.push_back(i);
+        FileManager::Create_Dir(path);
+    }
+}
 
 void FileSystem::Load_SuperBlock()
 {
@@ -33,7 +49,7 @@ void FileSystem::Init_All_Free_Blocks()
     unsigned int *stack = g_superblock.s_free;
     unsigned int &p_stk = g_superblock.s_nfree;
     int p_data = DATA_BLOCK_START_INDEX + 1;
-    std::cout << "Enter init all free blocks" << std::endl;
+    // std::cout << "Enter init all free blocks" << std::endl;
     while (p_data < TOTAL_BLOCK_NUM)
     {
         if (p_stk < MAX_NFREE)
@@ -96,6 +112,8 @@ void FileSystem::Format_Disk()
     Init_Root();
 
     Store_SuperBlock();
+
+    Init_Some_Dir();
 }
 
 unsigned int FileSystem::Allocate_Block()

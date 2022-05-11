@@ -7,6 +7,7 @@
 #include <string.h>
 using namespace std;
 extern FileSystem g_filesystem;
+
 void Shell::Func_Ls()
 {
     const unsigned int time_len = 25;
@@ -189,15 +190,19 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("cd")] = &Shell::Func_Cd;
     this->command_exec[string("create")] = &Shell::Func_Create;
     this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
+
+    this->command_exec[string("help")] = &Shell::Func_help;
+
     this->command_exec[string("open")] = &Shell::Func_Open;
     this->command_exec[string("openlist")] = &Shell::Func_Openlist;
     this->command_exec[string("close")] = &Shell::Func_Close;
+
 }
 
 void Shell::Prompt()
 {
     // string work_directory = "/usr/local/bin";
-    printf("# %s in %s\n$ ", this->usr_name.c_str(), current_path.c_str());
+    printf("\n# %s in %s\n$ ", this->usr_name.c_str(), current_path.c_str());
 }
 
 void Shell::Get_Command()
@@ -254,6 +259,7 @@ void Shell::Log_In()
     {
         string usr;
         string psw;
+        cout << endl;
         cout << "Input Your ID: ";
         getline(cin, usr);
         cout << "Input Password: ";
@@ -285,7 +291,7 @@ void Shell::Run()
         DiskDriver::Create_Disk();
     }
     current_path = "/";
-    cout << "Format File System?(y/n): ";
+    cout << "Erase All Data And Format The Disk?(y/n):";
     string format;
     getline(cin, format);
     if (format == "y")
@@ -358,4 +364,8 @@ void Shell::Transform_Path(vector<string> &path_t, vector<string> &path)
             path.push_back(path_t[i]);
         }
     }
+}
+
+void Shell::Func_help()
+{
 }

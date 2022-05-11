@@ -9,8 +9,10 @@
 
 class FileManager
 {
+
 private:
     static std::map<std::string, File *> f_open_map;
+
 
 public:
     static void Create_Dir(std::vector<std::string> &);
@@ -34,6 +36,8 @@ public:
     static unsigned int Write_File(File &file, const char *content);
 
     static unsigned int Read_File(File &file, char *content, int length);
+
+    // static void Init_Some_Dir();
 
     // void Edit_File_Permission();
 };

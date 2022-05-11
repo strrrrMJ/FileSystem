@@ -58,6 +58,8 @@ public:
 
     static void Boot();
 
+    static void Init_Some_Dir();
+
 public:
     friend class FileManager;
 };

@@ -37,6 +37,9 @@ public:
     void Func_Rmdir();
     void Func_Close();
     void Func_Open();
+
+    void Func_help();
+    
     void Func_Openlist();
 
     void Parse_Path(std::string, std::vector<std::string> &);

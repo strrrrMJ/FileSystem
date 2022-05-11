@@ -1,8 +1,13 @@
 #include "FileSystem.h"
 #include "User.h"
 #include "Shell.h"
+
 #include <iostream>
+
+using namespace std;
+
 FileSystem g_filesystem;
+
 int main()
 {
     try
@@ -10,9 +15,10 @@ int main()
         Shell shell;
         shell.Run();
     }
-    catch (const char *e)
+    catch (const char *msg)
     {
-        std::cout << e << std::endl;
+        cout << msg << endl;
     }
+
     return 0;
 }
