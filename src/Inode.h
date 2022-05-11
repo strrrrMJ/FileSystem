@@ -55,7 +55,8 @@ public:
 
 public:
     // file offset to disk index (byte as unit)
-    unsigned int Offset_To_Index(unsigned int offset);
+    unsigned int Offset_To_Index(unsigned int);
+    void Link(unsigned int);
 
 public:
     friend class FileSystem;
