@@ -34,12 +34,14 @@ public:
     void Func_Mkdir();
     void Func_Cd();
     void Func_Create();
+    void Func_Rm();
     void Func_Rmdir();
     void Func_Close();
     void Func_Open();
-
+    void Func_Write();
+    void Func_Read();
     void Func_help();
-    
+
     void Func_Openlist();
 
     void Parse_Path(std::string, std::vector<std::string> &);

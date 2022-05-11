@@ -182,6 +182,36 @@ void Shell::Func_Close()
     FileManager::Close_File(path);
 }
 
+void Shell::Func_Rm()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    FileManager::Remove_File(path);
+}
+
+void Shell::Func_Write()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    FileManager::Write_File(path, args[2].c_str());
+}
+
+void Shell::Func_Read()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    const int MAX_CONTENT_LEN = 500;
+    char content[MAX_CONTENT_LEN];
+    FileManager::Read_File(path, content, atoi(args[2].c_str()));
+    cout << content << endl;
+}
+
 void Shell::Init_Command_Exec()
 {
     this->command_exec[string("ls")] = &Shell::Func_Ls;
@@ -190,13 +220,15 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("cd")] = &Shell::Func_Cd;
     this->command_exec[string("create")] = &Shell::Func_Create;
     this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
+    this->command_exec[string("rm")] = &Shell::Func_Rm;
+    this->command_exec[string("write")] = &Shell::Func_Write;
+    this->command_exec[string("read")] = &Shell::Func_Read;
 
     this->command_exec[string("help")] = &Shell::Func_help;
 
     this->command_exec[string("open")] = &Shell::Func_Open;
     this->command_exec[string("openlist")] = &Shell::Func_Openlist;
     this->command_exec[string("close")] = &Shell::Func_Close;
-
 }
 
 void Shell::Prompt()
@@ -291,8 +323,8 @@ void Shell::Run()
         DiskDriver::Create_Disk();
     }
 
-    cout<<endl;
-    cout<<"Welcome to virtual unix file system!"<<endl;
+    cout << endl;
+    cout << "Welcome to virtual unix file system!" << endl;
 
     current_path = "/";
     cout << "Erase All Data And Format The Disk?(y/n):";
