@@ -14,9 +14,11 @@ private:
 public:
     static void Create_Dir(std::vector<std::string> &);
 
-    static void Remove_Dir(std::string dir_name);
+    static void Remove_Dir(std::vector<std::string> &);
 
     static void Create_File(std::vector<std::string> &);
+
+    static void Remove_File(std::vector<std::string> &);
 
     static std::string Current_Dir();
 

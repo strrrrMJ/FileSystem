@@ -121,6 +121,49 @@ void FileManager::Create_Dir(vector<string> &path)
     }
 }
 
+// Non-recursive
+void FileManager::Remove_Dir(vector<string> &path)
+{
+    if (path.size() < 2)
+    {
+        cout << "Wrong Instruction!" << endl;
+        return;
+    }
+    string dir_name = path[path.size() - 1];
+    path.pop_back();
+    int parent_directory_inode_num = Get_Inode_Num(path);
+    if (parent_directory_inode_num == -1)
+    {
+        cout << "This Directory Doesn't Exist!" << endl;
+        return;
+    }
+
+    Inode parent_directory_inode;
+    FileSystem::Load_Inode(parent_directory_inode, parent_directory_inode_num);
+    // if (parent_directory_inode.i_mode == 0)
+    // {
+    //     cout << "Parent Directory Doesn't Exist!" << endl;
+    //     return;
+    // }
+    vector<string> path0;
+    path0.push_back(dir_name);
+    int dir_inode_num = Get_Inode_Num(path0, parent_directory_inode_num);
+    if (dir_inode_num == -1)
+    {
+        cout << "This Directory Doesn't Exist!" << endl;
+    }
+    else
+    {
+        Inode dir_inode;
+        FileSystem::Load_Inode(dir_inode, dir_inode_num);
+        FileSystem::Free_Block(dir_inode.i_addr[0]);
+        FileSystem::Free_Inode(dir_inode_num);
+
+        parent_directory_inode.i_size--;
+        FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
+    }
+}
+
 void FileManager::Create_File(vector<string> &path)
 {
     if (path.size() < 2)

@@ -58,16 +58,51 @@ void Shell::Func_Exit()
 
 void Shell::Func_Mkdir()
 {
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
     vector<string> path;
-    Parse_Path(args[1], path);
+    Transform_Path(path_t, path);
     FileManager::Create_Dir(path);
 }
 void Shell::Func_Create()
 {
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
     vector<string> path;
-    Parse_Path(args[1], path);
+    Transform_Path(path_t, path);
     FileManager::Create_File(path);
 }
+
+void Shell::Func_Rmdir()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    vector<string> path_now_t, path_now;
+    Parse_Path(current_path, path_now_t);
+    Transform_Path(path_now_t, path_now);
+    // determine whether this path is current path's parent path
+    unsigned int i = 0;
+    while (i < path_now.size() && i < path.size())
+    {
+        if (path_now[i] != path[i])
+        {
+            break;
+        }
+        i++;
+    }
+
+    if (i == path.size())
+    {
+        cout << "You Can't Delete This Directory Now!" << endl;
+    }
+    else
+    {
+        FileManager::Remove_Dir(path);
+    }
+}
+
 void Shell::Func_Cd()
 {
     string complete_path;
@@ -96,24 +131,8 @@ void Shell::Func_Cd()
         cout << "Wrong Instruction!" << endl;
         return;
     }
-    for (unsigned int i = 0; i < path_component_t.size(); i++)
-    {
-        if (path_component_t[i] == ".")
-        {
-            continue;
-        }
-        else if (path_component_t[i] == "..")
-        {
-            if (path_component.size() > 1)
-            {
-                path_component.pop_back();
-            }
-        }
-        else
-        {
-            path_component.push_back(path_component_t[i]);
-        }
-    }
+
+    Transform_Path(path_component_t, path_component);
 
     if (path_component.size() == 1)
     {
@@ -137,6 +156,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("mkdir")] = &Shell::Func_Mkdir;
     this->command_exec[string("cd")] = &Shell::Func_Cd;
     this->command_exec[string("create")] = &Shell::Func_Create;
+    this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
 }
 
 void Shell::Prompt()
@@ -277,4 +297,26 @@ void Shell::Parse_Path(string path_string, vector<string> &path)
         }
     }
     path = res;
+}
+
+void Shell::Transform_Path(vector<string> &path_t, vector<string> &path)
+{
+    for (unsigned int i = 0; i < path_t.size(); i++)
+    {
+        if (path_t[i] == ".")
+        {
+            continue;
+        }
+        else if (path_t[i] == "..")
+        {
+            if (path.size() > 1)
+            {
+                path.pop_back();
+            }
+        }
+        else
+        {
+            path.push_back(path_t[i]);
+        }
+    }
 }
