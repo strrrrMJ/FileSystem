@@ -292,10 +292,11 @@ void Shell::Run()
     }
 
     cout<<endl;
-    cout<<"Welcome to virtual unix file system!"<<endl;
+    cout<<"Welcome To Virtual Unix File System!"<<endl;
+    cout<<endl;
 
     current_path = "/";
-    cout << "Erase All Data And Format The Disk?(y/n):";
+    cout << "Erase All Data And Format The Disk?(y/n): ";
     string format;
     getline(cin, format);
     if (format == "y")
