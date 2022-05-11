@@ -226,6 +226,55 @@ void FileManager::Create_File(vector<string> &path)
     }
 }
 
+void FileManager::Remove_File(vector<string> &path)
+{
+    if (path.size() < 2)
+    {
+        cout << "Wrong Instruction!" << endl;
+        return;
+    }
+    string file_name = path[path.size() - 1];
+    path.pop_back();
+    int parent_directory_inode_num = Get_Inode_Num(path);
+    if (parent_directory_inode_num == -1)
+    {
+        cout << "This File Doesn't Exist!" << endl;
+        return;
+    }
+
+    Inode parent_directory_inode;
+    FileSystem::Load_Inode(parent_directory_inode, parent_directory_inode_num);
+
+    vector<string> path0;
+    path0.push_back(file_name);
+    int file_inode_num = Get_Inode_Num(path0, parent_directory_inode_num);
+
+    if (file_inode_num == -1)
+    {
+        cout << "This Directory Doesn't Exist!" << endl;
+    }
+    else
+    {
+        Inode file_inode;
+        FileSystem::Load_Inode(file_inode, file_inode_num);
+
+        FileSystem::Free_Block(file_inode.i_addr[0]);
+
+        // calculate how many blocks this file use
+        unsigned int file_block_count = ceil(file_inode.i_size / BLOCK_SIZE);
+        // iteratively release space
+        for (unsigned int i = 0; i < file_block_count; i++)
+        {
+            unsigned int physical_block_num = file_inode.Offset_To_Index(i * BLOCK_SIZE);
+            FileSystem::Free_Block(physical_block_num);
+        }
+        FileSystem::Free_Inode(file_inode_num);
+
+        parent_directory_inode.i_size--;
+        FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
+    }
+}
+
 File *FileManager::Open_File(vector<string> &path)
 {
     vector<string> path0 = path;
