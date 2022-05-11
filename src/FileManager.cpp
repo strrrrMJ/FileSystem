@@ -227,6 +227,52 @@ void FileManager::Create_File(vector<string> &path)
     }
 }
 
+File *FileManager::Open_File(std::vector<std::string> &path)
+{
+    int inode_num = Get_Inode_Num(path);
+    if (inode_num == -1)
+    {
+        return NULL;
+    }
+    bool exist = false;
+    for (unsigned int i = 0; i < f_open_list.size(); i++)
+    {
+        if (f_open_list[i].f_inode_id == inode_num)
+        {
+            exist = true;
+            break;
+        }
+    }
+    if (exist)
+    {
+        return -2;
+    }
+    Inode inode;
+    FileSystem::Load_Inode(inode, inode_num);
+    if (inode.i_mode == 1)
+    {
+        return -3;
+    }
+    inode.i_count++;
+    inode.i_time = time(NULL);
+    FileSystem::Store_Inode(inode, inode_num);
+
+    File f;
+    f.f_inode_id = inode_num;
+    f.f_offset = 0;
+    f.f_uid = 0;
+    f_open_list.push_back(f);
+    return inode_num;
+}
+
+vector<string> FileManager::Open_File_List()
+{
+    vector<string> res;
+    for (unsigned int i = 0; i < f_open_list.size(); i++)
+    {
+        res
+    }
+}
 void FileManager::L_Seek(File &file, unsigned int pos)
 {
     Inode inode;
