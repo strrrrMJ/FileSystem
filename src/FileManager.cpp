@@ -52,6 +52,11 @@ int Get_Inode_Num(vector<string> &path, int begin_inode_num)
     }
 }
 
+void Transform_Directory_Path(std::vector<std::string> &path_t, std::vector<std::string> &path)
+{
+    
+}
+
 void FileManager::Create_Dir(vector<string> &path)
 {
     if (path.size() < 2)

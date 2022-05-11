@@ -62,18 +62,71 @@ void Shell::Func_Mkdir()
     Parse_Path(args[1], path);
     FileManager::Create_Dir(path);
 }
+void Shell::Func_Cd()
+{
+    string complete_path;
+    if (args[1][0] != '/')
+    {
+        complete_path = current_path + "/" + args[1];
+    }
+    else
+    {
+        complete_path = args[1];
+    }
+    vector<string> path_component_t;
+    vector<string> path_component;
+    Parse_Path(complete_path, path_component_t);
+    for (unsigned int i = 0; i < path_component_t.size(); i++)
+    {
+        if (path_component_t[i] == ".")
+        {
+            continue;
+        }
+        else if (path_component_t[i] == "..")
+        {
+            if (path_component.size() > 1)
+            {
+                path_component.pop_back();
+            }
+        }
+        else
+        {
+            path_component.push_back(path_component_t[i]);
+        }
+    }
+    int inode_num = Get_Inode_Num(path_component_t);
+    if (inode_num == -1)
+    {
+        cout << "This Directory Doesn't Exist!" << endl;
+        return;
+    }
+    if (path_component.size() == 1)
+    {
+        current_path = "/";
+    }
+    else
+    {
+
+        current_path = "";
+        for (unsigned int i = 1; i < path_component.size(); i++)
+        {
+            current_path += "/" + path_component[i];
+        }
+    }
+}
 
 void Shell::Init_Command_Exec()
 {
     this->command_exec[string("ls")] = &Shell::Func_Ls;
     this->command_exec[string("exit")] = &Shell::Func_Exit;
     this->command_exec[string("mkdir")] = &Shell::Func_Mkdir;
+    this->command_exec[string("cd")] = &Shell::Func_Cd;
 }
 
 void Shell::Prompt()
 {
-    string work_directory = "/usr/local/bin";
-    printf("# %s in %s\n$ ", this->usr_name.c_str(), work_directory.c_str());
+    // string work_directory = "/usr/local/bin";
+    printf("# %s in %s\n$ ", this->usr_name.c_str(), current_path.c_str());
 }
 
 void Shell::Get_Command()
@@ -157,7 +210,14 @@ void Shell::Log_In()
 void Shell::Run()
 {
     current_path = "/";
-    g_filesystem.Format_Disk();
+    cout << "Format File System?(y/n): ";
+    string format;
+    getline(cin, format);
+    if (format == "y")
+    {
+        FileSystem::Format_Disk();
+    }
+    FileSystem::Boot();
 
     this->Log_In();
     this->flag = true;

@@ -32,4 +32,6 @@ public:
 };
 int Get_Inode_Num(std::vector<std::string> &, int = -1);
 
+// handle relative path, such as ".", ".."
+void Transform_Directory_Path(std::vector<std::string> &, std::vector<std::string> &);
 #endif
