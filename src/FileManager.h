@@ -27,7 +27,7 @@ public:
 
     static void Open_File_List();
 
-    static void Close_File(File &file);
+    static void Close_File(std::vector<std::string> &);
 
     static void L_Seek(File &file, unsigned int pos);
 

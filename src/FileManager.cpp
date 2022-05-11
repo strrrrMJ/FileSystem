@@ -226,7 +226,7 @@ void FileManager::Create_File(vector<string> &path)
     }
 }
 
-File *FileManager::Open_File(std::vector<std::string> &path)
+File *FileManager::Open_File(vector<string> &path)
 {
     vector<string> path0 = path;
     // determine whether this file exists
@@ -281,6 +281,31 @@ void FileManager::Open_File_List()
         cout << item.first << endl;
     }
 }
+
+void FileManager::Close_File(vector<string> &path)
+{
+    // merge path component into a string
+    string path_string = "";
+    for (unsigned int i = 1; i < path.size(); i++)
+    {
+        path_string += "/" + path[i];
+    }
+    // if it hasn't been opened
+    if (f_open_map.count(path_string) == 0)
+    {
+        cout << "this file is not opened!" << endl;
+    }
+    else
+    {
+        // release File's memory
+        delete f_open_map[path_string];
+
+        f_open_map.erase(path_string);
+
+        cout << "close file successfully!" << endl;
+    }
+}
+
 void FileManager::L_Seek(File &file, unsigned int pos)
 {
     Inode inode;

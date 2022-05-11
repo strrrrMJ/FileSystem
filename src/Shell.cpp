@@ -172,6 +172,15 @@ void Shell::Func_Openlist()
     FileManager::Open_File_List();
 }
 
+void Shell::Func_Close()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    FileManager::Close_File(path);
+}
+
 void Shell::Init_Command_Exec()
 {
     this->command_exec[string("ls")] = &Shell::Func_Ls;
@@ -182,6 +191,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
     this->command_exec[string("open")] = &Shell::Func_Open;
     this->command_exec[string("openlist")] = &Shell::Func_Openlist;
+    this->command_exec[string("close")] = &Shell::Func_Close;
 }
 
 void Shell::Prompt()
