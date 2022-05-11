@@ -290,6 +290,10 @@ void Shell::Run()
     {
         DiskDriver::Create_Disk();
     }
+
+    cout<<endl;
+    cout<<"Welcome to virtual unix file system!"<<endl;
+
     current_path = "/";
     cout << "Erase All Data And Format The Disk?(y/n):";
     string format;

@@ -12,7 +12,12 @@ static const unsigned int SEC_PTR_NUM = 2;
 // The number of tertiary pointers in inode
 static const unsigned int TER_PTR_NUM = 2;
 
+// The number of block num (unsigned int) in a block
 static const unsigned int PTR_IN_BLOCK_NUM = 128;
+
+// almost 16.12MB
+static const unsigned int MAX_FILE_BLOCK_NUM = (DIRECT_PTR_NUM + SEC_PTR_NUM * PTR_IN_BLOCK_NUM + TER_PTR_NUM * PTR_IN_BLOCK_NUM * PTR_IN_BLOCK_NUM);
+
 
 class Inode
 {
@@ -56,6 +61,7 @@ public:
 public:
     // file offset to disk index (byte as unit)
     unsigned int Offset_To_Index(unsigned int offset);
+    void link(unsigned int);
 
 public:
     friend class FileSystem;

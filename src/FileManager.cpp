@@ -417,22 +417,158 @@ void FileManager::Close_File(vector<string> &path)
     }
 }
 
-void FileManager::L_Seek(File &file, unsigned int pos)
+void FileManager::L_Seek(vector<string> &path, unsigned int pos)
 {
+    string path_string = "";
+    for (unsigned int i = 1; i < path.size(); i++)
+    {
+        path_string += "/" + path[i];
+    }
+    File *file = f_open_map[path_string];
+
     Inode inode;
-    FileSystem::Load_Inode(inode, file.f_inode_id);
-    FileSystem::Store_Inode(inode, file.f_inode_id);
+    FileSystem::Load_Inode(inode, file->f_inode_id);
+    if (pos > inode.i_size)
+    {
+        cout << "Invalid Access!" << endl;
+    }
+    else
+    {
+        file->f_offset = pos;
+    }
+    FileSystem::Store_Inode(inode, file->f_inode_id);
 }
 
-unsigned int FileManager::Write_File(File &file, const char *content)
+unsigned int FileManager::Write_File(vector<string> &path, const char *content)
 {
-    Inode inode;
-    FileSystem::Load_Inode(inode, file.f_inode_id);
+    unsigned int total_wrriten_bytes = 0;
 
-    return -1;
+    // Get file structure
+    string path_string = "";
+    for (unsigned int i = 1; i < path.size(); i++)
+    {
+        path_string += "/" + path[i];
+    }
+    File *file = f_open_map[path_string];
+    unsigned int &offset = file->f_offset;
+
+    // Judge whether this write is feasible
+    unsigned int length = strlen(content);
+    unsigned int free_blocks_size = g_superblock.s_free_block_num * BLOCK_SIZE;
+    unsigned int free_file_size = MAX_FILE_BLOCK_NUM * BLOCK_SIZE - offset;
+
+    if (length > free_file_size)
+    {
+        cout << "Maximum File Limit Exceeded!" << endl;
+    }
+    else if (length > free_blocks_size)
+    {
+        cout << "Disk Space Isn't Enough!" << endl;
+    }
+    else
+    {
+        // Get the inode
+        Inode inode;
+        FileSystem::Load_Inode(inode, file->f_inode_id);
+
+        // Write
+        char *ptr = (char *)content;
+        while (length > 0)
+        {
+            // Caculate the size of blocks which are occupied by this file
+            unsigned int num_of_blk_occupied_by_this_file = inode.i_size / BLOCK_SIZE + 1;
+            unsigned int temp = num_of_blk_occupied_by_this_file * BLOCK_SIZE;
+
+            // Determine which phisical block would be written
+            unsigned int blkno;
+            if (offset < temp)
+            {
+                // Find the block (whick is already allocated)
+                blkno = inode.Offset_To_Index(offset);
+            }
+            else
+            {
+                // Allocate a new block
+                blkno = FileSystem::Allocate_Block();
+                // Link this new block to the inode's index structure
+                inode.link(blkno);
+            }
+
+            // Determine how many bytes would be write this cycle
+            unsigned int offset_in_blk = offset % BLOCK_SIZE;
+            unsigned int w_cnt_this_cycle = length < BLOCK_SIZE - offset_in_blk ? length : BLOCK_SIZE - offset_in_blk;
+
+            // Write to disk
+            DiskDriver::Write(blkno * BLOCK_SIZE, ptr, w_cnt_this_cycle);
+
+            // Update some variables
+            length -= w_cnt_this_cycle;
+            ptr += w_cnt_this_cycle;
+            offset += w_cnt_this_cycle;
+            total_wrriten_bytes += w_cnt_this_cycle;
+        }
+
+        // Chage the file's size
+        inode.i_size = offset > inode.i_size ? offset : inode.i_size;
+
+        // Change the last modified time
+        inode.i_time = time(NULL);
+
+        // Store the inode into disk
+        FileSystem::Store_Inode(inode, file->f_inode_id);
+    }
+
+    return total_wrriten_bytes;
 }
 
-unsigned int FileManager::Read_File(File &file, char *content, int length)
+unsigned int FileManager::Read_File(vector<string> &path, char *content, int length)
 {
-    return -1;
+    unsigned int total_read_bytes = 0;
+
+    // Get file structure
+    string path_string = "";
+    for (unsigned int i = 1; i < path.size(); i++)
+    {
+        path_string += "/" + path[i];
+    }
+    File *file = f_open_map[path_string];
+    unsigned int &offset = file->f_offset;
+
+    // Judge whether this read is feasible
+    unsigned int free_file_size = MAX_FILE_BLOCK_NUM * BLOCK_SIZE - offset;
+    if (length > free_file_size)
+    {
+        cout << "Don't Try To Read More Than The File!" << endl;
+    }
+
+    // Get the inode
+    Inode inode;
+    FileSystem::Load_Inode(inode, file->f_inode_id);
+
+    // Read
+    char *ptr = (char *)content;
+    while (length > 0)
+    {
+        // Get the physical blkno
+        unsigned int blkno;
+        blkno = inode.Offset_To_Index(offset);
+
+        // Determine how many bytes would be read this cycle
+        unsigned int offset_in_blk = offset % BLOCK_SIZE;
+        unsigned int r_cnt_this_cycle = length < BLOCK_SIZE - offset_in_blk ? length : BLOCK_SIZE - offset_in_blk;
+
+        // Read from disk
+        DiskDriver::Read(blkno * BLOCK_SIZE, ptr, r_cnt_this_cycle);
+
+        // Update some variables
+        length -= r_cnt_this_cycle;
+        ptr += r_cnt_this_cycle;
+        offset += r_cnt_this_cycle;
+        total_read_bytes += r_cnt_this_cycle;
+    }
+
+    // Store the inode into disk
+    FileSystem::Store_Inode(inode, file->f_inode_id);
+
+    return total_read_bytes;
 }

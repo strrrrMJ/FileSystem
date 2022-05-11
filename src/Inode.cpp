@@ -35,3 +35,7 @@ unsigned int Inode::Offset_To_Index(unsigned int offset)
         return -1;
     }
 }
+
+void Inode::link(unsigned int x)
+{
+}
