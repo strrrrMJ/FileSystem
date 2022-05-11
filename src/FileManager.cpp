@@ -52,11 +52,6 @@ int Get_Inode_Num(vector<string> &path, int begin_inode_num)
     }
 }
 
-void Transform_Directory_Path(std::vector<std::string> &path_t, std::vector<std::string> &path)
-{
-    
-}
-
 void FileManager::Create_Dir(vector<string> &path)
 {
     if (path.size() < 2)
@@ -74,12 +69,17 @@ void FileManager::Create_Dir(vector<string> &path)
     {
         Inode parent_directory_inode;
         FileSystem::Load_Inode(parent_directory_inode, parent_directory_inode_num);
+        if (parent_directory_inode.i_mode == 0)
+        {
+            cout << "Parent Directory Doesn't Exist!" << endl;
+            return;
+        }
         vector<string> path0;
         path0.push_back(dir_name);
         int dir_inode_num = Get_Inode_Num(path0, parent_directory_inode_num);
         if (dir_inode_num != -1)
         {
-            cout << "This Directory Already Exists!" << endl;
+            cout << "This Directory or File Already Exists!" << endl;
         }
         else
         {
@@ -117,6 +117,69 @@ void FileManager::Create_Dir(vector<string> &path)
             strcpy(dir.d_filename[1], "..");
             DiskDriver::Write(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
             FileSystem::Store_Inode(inode, dir_inode_num);
+        }
+    }
+}
+
+void FileManager::Create_File(vector<string> &path)
+{
+    if (path.size() < 2)
+    {
+        throw -1;
+    }
+    string file_name = path[path.size() - 1];
+    path.pop_back();
+    int parent_directory_inode_num = Get_Inode_Num(path);
+    if (parent_directory_inode_num == -1)
+    {
+        cout << "Parent Directory Doesn't Exist!" << endl;
+    }
+    else
+    {
+        Inode parent_directory_inode;
+        FileSystem::Load_Inode(parent_directory_inode, parent_directory_inode_num);
+        if (parent_directory_inode.i_mode == 0)
+        {
+            cout << "Parent Directory Doesn't Exist!" << endl;
+            return;
+        }
+        vector<string> path0;
+        path0.push_back(file_name);
+        int file_inode_num = Get_Inode_Num(path0, parent_directory_inode_num);
+        if (file_inode_num != -1)
+        {
+            cout << "This Directory or File Already Exists!" << endl;
+        }
+        else
+        {
+            file_inode_num = FileSystem::Allocate_Inode();
+
+            Inode inode;
+            inode.i_size = 0;
+            inode.i_mode = 0;
+            inode.i_number = file_inode_num;
+            inode.i_count = 0;
+            inode.i_permission = 0;
+            inode.i_uid = 0;
+            inode.i_gid = 0;
+            time_t t;
+            time(&t);
+            inode.i_time = t;
+
+            Directory parent_directory;
+            unsigned int block_num = parent_directory_inode.i_addr[0];
+            DiskDriver::Read(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
+            parent_directory.d_inode_num[parent_directory_inode.i_size] = file_inode_num;
+            strcpy(parent_directory.d_filename[parent_directory_inode.i_size], file_name.c_str());
+            DiskDriver::Write(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
+
+            parent_directory_inode.i_size++;
+
+            FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
+
+            // inode.i_addr[0] = FileSystem::Allocate_Block();
+
+            FileSystem::Store_Inode(inode, file_inode_num);
         }
     }
 }

@@ -62,6 +62,12 @@ void Shell::Func_Mkdir()
     Parse_Path(args[1], path);
     FileManager::Create_Dir(path);
 }
+void Shell::Func_Create()
+{
+    vector<string> path;
+    Parse_Path(args[1], path);
+    FileManager::Create_File(path);
+}
 void Shell::Func_Cd()
 {
     string complete_path;
@@ -73,9 +79,23 @@ void Shell::Func_Cd()
     {
         complete_path = args[1];
     }
-    vector<string> path_component_t;
+    vector<string> path_component_t, path_component_t0;
     vector<string> path_component;
     Parse_Path(complete_path, path_component_t);
+    path_component_t0 = path_component_t;
+    int inode_num = Get_Inode_Num(path_component_t0);
+    if (inode_num == -1)
+    {
+        cout << "This Directory Doesn't Exist!" << endl;
+        return;
+    }
+    Inode inode;
+    FileSystem::Load_Inode(inode, inode_num);
+    if (inode.i_mode == 0)
+    {
+        cout << "Wrong Instruction!" << endl;
+        return;
+    }
     for (unsigned int i = 0; i < path_component_t.size(); i++)
     {
         if (path_component_t[i] == ".")
@@ -94,12 +114,7 @@ void Shell::Func_Cd()
             path_component.push_back(path_component_t[i]);
         }
     }
-    int inode_num = Get_Inode_Num(path_component_t);
-    if (inode_num == -1)
-    {
-        cout << "This Directory Doesn't Exist!" << endl;
-        return;
-    }
+
     if (path_component.size() == 1)
     {
         current_path = "/";
@@ -121,6 +136,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("exit")] = &Shell::Func_Exit;
     this->command_exec[string("mkdir")] = &Shell::Func_Mkdir;
     this->command_exec[string("cd")] = &Shell::Func_Cd;
+    this->command_exec[string("create")] = &Shell::Func_Create;
 }
 
 void Shell::Prompt()

@@ -16,6 +16,8 @@ public:
 
     static void Remove_Dir(std::string dir_name);
 
+    static void Create_File(std::vector<std::string> &);
+
     static std::string Current_Dir();
 
     static File &Open_File();
@@ -31,7 +33,4 @@ public:
     // void Edit_File_Permission();
 };
 int Get_Inode_Num(std::vector<std::string> &, int = -1);
-
-// handle relative path, such as ".", ".."
-void Transform_Directory_Path(std::vector<std::string> &, std::vector<std::string> &);
 #endif
