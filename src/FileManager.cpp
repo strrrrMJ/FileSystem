@@ -9,10 +9,8 @@
 using namespace std;
 
 Directory g_cur_dir;
-
+std::map<std::string, File *> FileManager::f_open_map;
 extern SuperBlock g_superblock;
-
-using namespace std;
 
 // >= 0: vliad
 // == -1: invalid, this file or directory does not exist
@@ -283,9 +281,87 @@ void FileManager::Create_File(vector<string> &path)
         }
     }
 }
-
 void FileManager::Remove_File(vector<string> &path){
     
+}
+File *FileManager::Open_File(vector<string> &path)
+{
+    vector<string> path0 = path;
+    // determine whether this file exists
+    int inode_num = Get_Inode_Num(path);
+    if (inode_num == -1)
+    {
+        // this file doesn't exist
+        return NULL;
+    }
+    // determine whether it's a file
+    Inode inode;
+    FileSystem::Load_Inode(inode, inode_num);
+    if (inode.i_mode == 1)
+    {
+        // it's directory
+        return NULL;
+    }
+
+    // merge path component into a string, as is convenient to judge whether this file was already opened
+    string path_string = "";
+    for (unsigned int i = 1; i < path0.size(); i++)
+    {
+        path_string += "/" + path0[i];
+    }
+    // judge
+    if (f_open_map.count(path_string) != 0)
+    {
+        // already opened
+        return NULL;
+    }
+
+    // modify data of inode
+    inode.i_count++;
+    inode.i_time = time(NULL);
+    FileSystem::Store_Inode(inode, inode_num);
+
+    // add this file handler to map
+    File *f = new File;
+    f->f_inode_id = inode_num;
+    f->f_offset = 0;
+    f->f_offset = 0;
+    f_open_map[path_string] = f;
+    cout << path_string << endl;
+    return f;
+}
+
+void FileManager::Open_File_List()
+{
+    cout << "File Already Opened:\n";
+    for (auto &item : f_open_map)
+    {
+        cout << item.first << endl;
+    }
+}
+
+void FileManager::Close_File(vector<string> &path)
+{
+    // merge path component into a string
+    string path_string = "";
+    for (unsigned int i = 1; i < path.size(); i++)
+    {
+        path_string += "/" + path[i];
+    }
+    // if it hasn't been opened
+    if (f_open_map.count(path_string) == 0)
+    {
+        cout << "this file is not opened!" << endl;
+    }
+    else
+    {
+        // release File's memory
+        delete f_open_map[path_string];
+
+        f_open_map.erase(path_string);
+
+        cout << "close file successfully!" << endl;
+    }
 }
 
 void FileManager::L_Seek(File &file, unsigned int pos)

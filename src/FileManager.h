@@ -5,11 +5,14 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 class FileManager
 {
-public:
-    bool Dir_Name_Conflict(std::string dir_name);
+
+private:
+    static std::map<std::string, File *> f_open_map;
+
 
 public:
     static void Create_Dir(std::vector<std::string> &);
@@ -22,9 +25,11 @@ public:
 
     static std::string Current_Dir();
 
-    static File &Open_File();
+    static File *Open_File(std::vector<std::string> &);
 
-    static void Close_File(File &file);
+    static void Open_File_List();
+
+    static void Close_File(std::vector<std::string> &);
 
     static void L_Seek(File &file, unsigned int pos);
 

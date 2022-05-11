@@ -40,11 +40,11 @@ void Shell::Func_Ls()
         cout << setw(type_len);
         if (mode == 1)
         {
-            cout << "DIR" << setw(size_len) << "";
+            cout << "<DIR>" << setw(size_len) << "";
         }
         else
         {
-            cout << "FILE" << setw(size_len) << size;
+            cout << "<FILE>" << setw(size_len) << size;
         }
         cout << setw(name_len) << dir.d_filename[i];
         cout << endl;
@@ -65,6 +65,7 @@ void Shell::Func_Mkdir()
     Transform_Path(path_t, path);
     FileManager::Create_Dir(path);
 }
+
 void Shell::Func_Create()
 {
     vector<string> path_t;
@@ -150,6 +151,37 @@ void Shell::Func_Cd()
     }
 }
 
+void Shell::Func_Open()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    File *f = FileManager::Open_File(path);
+    if (!f)
+    {
+        cout << "failed to open it, for you could opened it already or it does not exist!" << endl;
+    }
+    else
+    {
+        cout << "file successfully opened!" << endl;
+    }
+}
+
+void Shell::Func_Openlist()
+{
+    FileManager::Open_File_List();
+}
+
+void Shell::Func_Close()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    FileManager::Close_File(path);
+}
+
 void Shell::Init_Command_Exec()
 {
     this->command_exec[string("ls")] = &Shell::Func_Ls;
@@ -158,7 +190,13 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("cd")] = &Shell::Func_Cd;
     this->command_exec[string("create")] = &Shell::Func_Create;
     this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
+<<<<<<< HEAD
     this->command_exec[string("help")] = &Shell::Func_help;
+=======
+    this->command_exec[string("open")] = &Shell::Func_Open;
+    this->command_exec[string("openlist")] = &Shell::Func_Openlist;
+    this->command_exec[string("close")] = &Shell::Func_Close;
+>>>>>>> 3061ef49dbf050a66a328c6536ad788f0ac930ee
 }
 
 void Shell::Prompt()

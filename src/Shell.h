@@ -37,7 +37,11 @@ public:
     void Func_Rmdir();
     void Func_Close();
     void Func_Open();
+<<<<<<< HEAD
     void Func_help();
+=======
+    void Func_Openlist();
+>>>>>>> 3061ef49dbf050a66a328c6536ad788f0ac930ee
 
     void Parse_Path(std::string, std::vector<std::string> &);
     static void Transform_Path(std::vector<std::string> &, std::vector<std::string> &);
