@@ -33,7 +33,7 @@ void Shell::Func_Ls()
         FileSystem::Load_Inode(sub_dir_inode, sub_dir_inode_num);
         time_t time = sub_dir_inode.i_time;
         unsigned short mode = sub_dir_inode.i_mode;
-        unsigned short size = sub_dir_inode.i_size;
+        unsigned int size = sub_dir_inode.i_size;
         char *time_str = asctime(gmtime(&time));
         time_str[strlen(time_str) - 1] = 0;
         cout << setw(time_len) << time_str;
@@ -211,7 +211,14 @@ void Shell::Func_Read()
     FileManager::Read_File(path, content, atoi(args[2].c_str()));
     cout << content << endl;
 }
-
+void Shell::Func_Seekg()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    FileManager::L_Seek(path, atoi(args[2].c_str()));
+}
 void Shell::Init_Command_Exec()
 {
     this->command_exec[string("ls")] = &Shell::Func_Ls;
@@ -229,6 +236,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("open")] = &Shell::Func_Open;
     this->command_exec[string("openlist")] = &Shell::Func_Openlist;
     this->command_exec[string("close")] = &Shell::Func_Close;
+    this->command_exec[string("seekg")] = &Shell::Func_Seekg;
 }
 
 void Shell::Prompt()
@@ -251,9 +259,13 @@ void Shell::Get_Command()
     string buf;
 
     stringstream s(command);
+    int count = 0;
     while (s >> buf)
     {
-        transform(buf.begin(), buf.end(), buf.begin(), ::tolower);
+        if (count++ == 0)
+        {
+            transform(buf.begin(), buf.end(), buf.begin(), ::tolower);
+        }
         this->args.push_back(buf);
     }
 }

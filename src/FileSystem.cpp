@@ -12,7 +12,7 @@ SuperBlock g_superblock;
 
 void FileSystem::Init_Some_Dir()
 {
-    vector<string> list = {"Users", "bin", "dev", "opt", "sbin", "tmp", "usr", "var"};
+    vector<string> list = {"bin", "Users", "dev", "opt", "sbin", "tmp", "usr", "var"};
     for (auto i : list)
     {
         vector<string> path = {"root"};

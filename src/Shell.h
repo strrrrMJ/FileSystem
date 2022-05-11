@@ -40,6 +40,7 @@ public:
     void Func_Open();
     void Func_Write();
     void Func_Read();
+    void Func_Seekg();
     void Func_help();
 
     void Func_Openlist();

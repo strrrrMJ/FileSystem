@@ -101,7 +101,7 @@ void Inode::Link(unsigned int physical_block_num)
 
         unsigned level3_index_table[PTR_IN_BLOCK_NUM];
         DiskDriver::Read(level2_index_table[second_index] * BLOCK_SIZE, (char *)level3_index_table, BLOCK_SIZE);
-        level3_index_table[second_index] = physical_block_num;
+        level3_index_table[third_index] = physical_block_num;
         DiskDriver::Write(level2_index_table[second_index] * BLOCK_SIZE, (char *)level3_index_table, BLOCK_SIZE);
     }
     else
@@ -109,5 +109,50 @@ void Inode::Link(unsigned int physical_block_num)
         // file exceeds its maximum size
         // it cannot be linked to any new physical block anymore
         throw "INVALID ACCESS!";
+    }
+}
+
+void Inode::Free_All_Space()
+{
+    unsigned int block_cnt = ceil(float(i_size) / BLOCK_SIZE);
+    for (unsigned int i = 0; i < block_cnt; i++)
+    {
+        unsigned int physical_block_num = Offset_To_Index(i * BLOCK_SIZE);
+        cout << "Level1: Free block: " << physical_block_num << endl;
+        FileSystem::Free_Block(physical_block_num);
+    }
+    if (block_cnt > DIRECT_PTR_NUM)
+    {
+        unsigned int level2_index_table_num = ceil(float(block_cnt - DIRECT_PTR_NUM) / PTR_IN_BLOCK_NUM);
+        if (level2_index_table_num <= SEC_PTR_NUM)
+        {
+            for (unsigned int i = 0; i < level2_index_table_num; i++)
+            {
+                cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + i] << endl;
+                FileSystem::Free_Block(i_addr[DIRECT_PTR_NUM + i]);
+            }
+        }
+        else
+        {
+            cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM] << endl;
+            cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + 1] << endl;
+            FileSystem::Free_Block(i_addr[DIRECT_PTR_NUM]);
+            FileSystem::Free_Block(i_addr[DIRECT_PTR_NUM + 1]);
+            unsigned int level2_index_table_num_remain = ceil(float(level2_index_table_num - SEC_PTR_NUM) / PTR_IN_BLOCK_NUM);
+            unsigned int level3_index_table_num_remain = level2_index_table_num - SEC_PTR_NUM;
+            for (unsigned int i = 0; i < level2_index_table_num_remain; i++)
+            {
+                unsigned int level2_index_table[PTR_IN_BLOCK_NUM];
+                DiskDriver::Read(i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i] * BLOCK_SIZE, (char *)level2_index_table, BLOCK_SIZE);
+                for (unsigned int j = 0; j < PTR_IN_BLOCK_NUM && j < level3_index_table_num_remain; j++)
+                {
+                    cout << "Level3: Free block: " << level2_index_table[j] << endl;
+                    FileSystem::Free_Block(level2_index_table[j]);
+                }
+                level3_index_table_num_remain -= PTR_IN_BLOCK_NUM;
+                cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i] << endl;
+                FileSystem::Free_Block(i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i]);
+            }
+        }
     }
 }
