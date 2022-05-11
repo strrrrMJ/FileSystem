@@ -245,6 +245,10 @@ void Shell::Log_In()
 
 void Shell::Run()
 {
+    if (!DiskDriver::Exists())
+    {
+        DiskDriver::Create_Disk();
+    }
     current_path = "/";
     cout << "Format File System?(y/n): ";
     string format;
