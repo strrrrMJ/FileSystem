@@ -4,6 +4,7 @@
 #include "Directory.h"
 #include "User.h"
 #include "FileSystem.h"
+#include "FileManager.h"
 
 #include <vector>
 #include <string>
@@ -18,6 +19,7 @@ public:
     bool flag;
     std::string usr_name;
     std::map<std::string, void (Shell::*)(void)> command_exec;
+    std::string current_path;
 
 public:
     void Prompt();
@@ -27,11 +29,17 @@ public:
     void Init_Command_Exec();
     void Log_In();
 
-    void Func_Dir();
+    void Func_Ls();
     void Func_Exit();
+    void Func_Mkdir();
+    void Func_Cd();
     void Func_Create();
+    void Func_Rmdir();
     void Func_Close();
     void Func_Open();
+
+    void Parse_Path(std::string, std::vector<std::string> &);
+    static void Transform_Path(std::vector<std::string> &, std::vector<std::string> &);
 
 public:
     void Run();

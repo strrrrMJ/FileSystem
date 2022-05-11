@@ -3,9 +3,11 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <time.h>
+#include <string.h>
 using namespace std;
 extern FileSystem g_filesystem;
-void Shell::Func_Dir()
+void Shell::Func_Ls()
 {
     const unsigned int time_len = 25;
     const unsigned int type_len = 15;
@@ -16,8 +18,36 @@ void Shell::Func_Dir()
     cout << setw(size_len) << "Size(Byte)";
     cout << setw(name_len) << "Name";
     cout << endl;
-    // 每行输出文件/目录信息
-    // ......
+    Inode inode;
+    vector<string> path;
+    Parse_Path(current_path, path);
+    int dir_inode_num = Get_Inode_Num(path);
+    FileSystem::Load_Inode(inode, dir_inode_num);
+    Directory dir;
+    DiskDriver::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+    for (unsigned int i = 0; i < inode.i_size; i++)
+    {
+        Inode sub_dir_inode;
+        unsigned int sub_dir_inode_num = dir.d_inode_num[i];
+        FileSystem::Load_Inode(sub_dir_inode, sub_dir_inode_num);
+        time_t time = sub_dir_inode.i_time;
+        unsigned short mode = sub_dir_inode.i_mode;
+        unsigned short size = sub_dir_inode.i_size;
+        char *time_str = asctime(gmtime(&time));
+        time_str[strlen(time_str) - 1] = 0;
+        cout << setw(time_len) << time_str;
+        cout << setw(type_len);
+        if (mode == 1)
+        {
+            cout << "DIR" << setw(size_len) << "";
+        }
+        else
+        {
+            cout << "FILE" << setw(size_len) << size;
+        }
+        cout << setw(name_len) << dir.d_filename[i];
+        cout << endl;
+    }
 }
 
 void Shell::Func_Exit()
@@ -25,16 +55,114 @@ void Shell::Func_Exit()
     cout << "Exit!" << endl;
     this->flag = false;
 }
+
+void Shell::Func_Mkdir()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    FileManager::Create_Dir(path);
+}
+void Shell::Func_Create()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    FileManager::Create_File(path);
+}
+
+void Shell::Func_Rmdir()
+{
+    vector<string> path_t;
+    Parse_Path(args[1], path_t);
+    vector<string> path;
+    Transform_Path(path_t, path);
+    vector<string> path_now_t, path_now;
+    Parse_Path(current_path, path_now_t);
+    Transform_Path(path_now_t, path_now);
+    // determine whether this path is current path's parent path
+    unsigned int i = 0;
+    while (i < path_now.size() && i < path.size())
+    {
+        if (path_now[i] != path[i])
+        {
+            break;
+        }
+        i++;
+    }
+
+    if (i == path.size())
+    {
+        cout << "You Can't Delete This Directory Now!" << endl;
+    }
+    else
+    {
+        FileManager::Remove_Dir(path);
+    }
+}
+
+void Shell::Func_Cd()
+{
+    string complete_path;
+    if (args[1][0] != '/')
+    {
+        complete_path = current_path + "/" + args[1];
+    }
+    else
+    {
+        complete_path = args[1];
+    }
+    vector<string> path_component_t, path_component_t0;
+    vector<string> path_component;
+    Parse_Path(complete_path, path_component_t);
+    path_component_t0 = path_component_t;
+    int inode_num = Get_Inode_Num(path_component_t0);
+    if (inode_num == -1)
+    {
+        cout << "This Directory Doesn't Exist!" << endl;
+        return;
+    }
+    Inode inode;
+    FileSystem::Load_Inode(inode, inode_num);
+    if (inode.i_mode == 0)
+    {
+        cout << "Wrong Instruction!" << endl;
+        return;
+    }
+
+    Transform_Path(path_component_t, path_component);
+
+    if (path_component.size() == 1)
+    {
+        current_path = "/";
+    }
+    else
+    {
+
+        current_path = "";
+        for (unsigned int i = 1; i < path_component.size(); i++)
+        {
+            current_path += "/" + path_component[i];
+        }
+    }
+}
+
 void Shell::Init_Command_Exec()
 {
-    this->command_exec[string("dir")] = &Shell::Func_Dir;
+    this->command_exec[string("ls")] = &Shell::Func_Ls;
     this->command_exec[string("exit")] = &Shell::Func_Exit;
+    this->command_exec[string("mkdir")] = &Shell::Func_Mkdir;
+    this->command_exec[string("cd")] = &Shell::Func_Cd;
+    this->command_exec[string("create")] = &Shell::Func_Create;
+    this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
 }
 
 void Shell::Prompt()
 {
-    string work_directory = "/usr/local/bin";
-    printf("# %s in %s\n$ ", this->usr_name.c_str(), work_directory.c_str());
+    // string work_directory = "/usr/local/bin";
+    printf("# %s in %s\n$ ", this->usr_name.c_str(), current_path.c_str());
 }
 
 void Shell::Get_Command()
@@ -117,8 +245,15 @@ void Shell::Log_In()
 
 void Shell::Run()
 {
-
-    g_filesystem.Format_Disk();
+    current_path = "/";
+    cout << "Format File System?(y/n): ";
+    string format;
+    getline(cin, format);
+    if (format == "y")
+    {
+        FileSystem::Format_Disk();
+    }
+    FileSystem::Boot();
 
     this->Log_In();
     this->flag = true;
@@ -131,6 +266,57 @@ void Shell::Run()
         if (this->Is_Over())
         {
             break;
+        }
+    }
+}
+
+// Make sure path_string.length() > 0
+void Shell::Parse_Path(string path_string, vector<string> &path)
+{
+    // path example: /usr/psw
+    string complete_path;
+    if (path_string[0] != '/')
+    {
+        complete_path = this->current_path + "/" + path_string;
+    }
+    else
+    {
+        complete_path = path_string;
+    }
+
+    vector<string> res;
+    res.push_back(string("root"));
+
+    stringstream ss(complete_path);
+    string item;
+    while (getline(ss, item, '/'))
+    {
+        if (!item.empty())
+        {
+            res.push_back(item);
+        }
+    }
+    path = res;
+}
+
+void Shell::Transform_Path(vector<string> &path_t, vector<string> &path)
+{
+    for (unsigned int i = 0; i < path_t.size(); i++)
+    {
+        if (path_t[i] == ".")
+        {
+            continue;
+        }
+        else if (path_t[i] == "..")
+        {
+            if (path.size() > 1)
+            {
+                path.pop_back();
+            }
+        }
+        else
+        {
+            path.push_back(path_t[i]);
         }
     }
 }

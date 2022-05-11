@@ -12,6 +12,8 @@ static const unsigned int SEC_PTR_NUM = 2;
 // The number of tertiary pointers in inode
 static const unsigned int TER_PTR_NUM = 2;
 
+static const unsigned int PTR_IN_BLOCK_NUM = 128;
+
 class Inode
 {
 public:
@@ -52,9 +54,8 @@ public:
     time_t i_time; // last modified time
 
 public:
-
     // file offset to disk index (byte as unit)
-    static unsigned int Offset_To_Index(unsigned int offset);
+    unsigned int Offset_To_Index(unsigned int offset);
 
 public:
     friend class FileSystem;
