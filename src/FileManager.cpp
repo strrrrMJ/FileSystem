@@ -6,12 +6,9 @@
 #include <cstdint>
 #include <cstring>
 using namespace std;
+
 Directory g_cur_dir;
-
 extern SuperBlock g_superblock;
-
-using namespace std;
-
 // >= 0: vliad
 // == -1: invalid, this file or directory does not exist
 int Get_Inode_Num(vector<string> &path, int begin_inode_num)
@@ -229,48 +226,56 @@ void FileManager::Create_File(vector<string> &path)
 
 File *FileManager::Open_File(std::vector<std::string> &path)
 {
+
+    // determine whether this file exists
     int inode_num = Get_Inode_Num(path);
     if (inode_num == -1)
     {
+        // this file doesn't exist
         return NULL;
     }
-    bool exist = false;
-    for (unsigned int i = 0; i < f_open_list.size(); i++)
-    {
-        if (f_open_list[i].f_inode_id == inode_num)
-        {
-            exist = true;
-            break;
-        }
-    }
-    if (exist)
-    {
-        return -2;
-    }
+    // determine whether it's a file
     Inode inode;
     FileSystem::Load_Inode(inode, inode_num);
     if (inode.i_mode == 1)
     {
-        return -3;
+        // it's directory
+        return NULL;
     }
+
+    // merge path component into a string, as is convenient to judge whether this file was already opened
+    string path_string = "";
+    for (unsigned int i = 1; i < path.size(); i++)
+    {
+        path_string += "/" + path[i];
+    }
+    // judge
+    if (f_open_map.count(path_string) != 0)
+    {
+        // already opened
+        return NULL;
+    }
+
+    // modify data of inode
     inode.i_count++;
     inode.i_time = time(NULL);
     FileSystem::Store_Inode(inode, inode_num);
 
-    File f;
-    f.f_inode_id = inode_num;
-    f.f_offset = 0;
-    f.f_uid = 0;
-    f_open_list.push_back(f);
-    return inode_num;
+    // add this file handler to map
+    File *f = new File;
+    f->f_inode_id = inode_num;
+    f->f_offset = 0;
+    f->f_offset = 0;
+    f_open_map[path_string] = f;
+    return f;
 }
 
-vector<string> FileManager::Open_File_List()
+void FileManager::Open_File_List()
 {
-    vector<string> res;
-    for (unsigned int i = 0; i < f_open_list.size(); i++)
+    cout << "File Already Opened:\n";
+    for (auto &item : f_open_map)
     {
-        res
+        cout << item.first << endl;
     }
 }
 void FileManager::L_Seek(File &file, unsigned int pos)
