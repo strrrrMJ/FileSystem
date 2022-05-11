@@ -56,6 +56,8 @@ public:
 
     static void Init_Root();
 
+    static void Boot();
+
 public:
     friend class FileManager;
 };

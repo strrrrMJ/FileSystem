@@ -135,6 +135,8 @@ void FileSystem::Free_Block(unsigned int block_num)
         stack[0] = block_num;
         p_stk = 1;
     }
+
+    Store_SuperBlock();
 }
 
 unsigned int FileSystem::Allocate_Inode()
@@ -179,4 +181,9 @@ void FileSystem::Load_Inode(Inode &inode, unsigned int inode_pos)
 void FileSystem::Store_Inode(Inode &inode, unsigned int inode_pos)
 {
     DiskDriver::Write(INODE_START_INDEX * BLOCK_SIZE + inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+}
+
+void FileSystem::Boot()
+{
+    Load_SuperBlock();
 }
