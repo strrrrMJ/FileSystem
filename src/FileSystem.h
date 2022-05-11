@@ -23,7 +23,7 @@ static const unsigned int INODE_START_INDEX = BITMAP_START_INDEX + (BITMAP_SIZE 
 static const unsigned int DATA_BLOCK_START_INDEX = INODE_START_INDEX + (INODE_NUM * INODE_SIZE - 1) / BLOCK_SIZE + 1;
 static const unsigned int DATA_BLOCK_NUM = 2 * 1024 * 128;
 
-static const unsigned int TOTAL_BLOCK_NUM = (DATA_BLOCK_NUM + DATA_BLOCK_START_INDEX); // The unit is MB
+static const unsigned int TOTAL_BLOCK_NUM = (DATA_BLOCK_NUM + DATA_BLOCK_START_INDEX);//Almost 128MB
 static const unsigned int DISK_SIZE = (TOTAL_BLOCK_NUM * BLOCK_SIZE) / (1024 * 1024);
 
 class FileSystem

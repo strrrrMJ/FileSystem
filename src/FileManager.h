@@ -13,7 +13,6 @@ class FileManager
 private:
     static std::map<std::string, File *> f_open_map;
 
-
 public:
     static void Create_Dir(std::vector<std::string> &);
 
@@ -31,15 +30,11 @@ public:
 
     static void Close_File(std::vector<std::string> &);
 
-    static void L_Seek(File &file, unsigned int pos);
+    static void L_Seek(std::vector<std::string> &, unsigned int);
 
-    static unsigned int Write_File(File &file, const char *content);
+    static unsigned int Write_File(std::vector<std::string> &, const char *content);
 
-    static unsigned int Read_File(File &file, char *content, int length);
-
-    // static void Init_Some_Dir();
-
-    // void Edit_File_Permission();
+    static unsigned int Read_File(std::vector<std::string> &, char *content, int length);
 };
 int Get_Inode_Num(std::vector<std::string> &, int = -1);
 #endif
