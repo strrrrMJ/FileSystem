@@ -5,7 +5,9 @@
 #include <time.h>
 #include <cstdint>
 #include <cstring>
+
 using namespace std;
+
 Directory g_cur_dir;
 
 extern SuperBlock g_superblock;
@@ -121,7 +123,7 @@ void FileManager::Create_Dir(vector<string> &path)
     }
 }
 
-// Non-recursive
+// Recursively delete
 void FileManager::Remove_Dir(vector<string> &path)
 {
     if (path.size() < 2)
@@ -130,7 +132,6 @@ void FileManager::Remove_Dir(vector<string> &path)
         return;
     }
     string dir_name = path[path.size() - 1];
-    string this_dir_name = path[path.size() - 1];
     path.pop_back();
     int parent_directory_inode_num = Get_Inode_Num(path);
     if (parent_directory_inode_num == -1)
@@ -141,41 +142,83 @@ void FileManager::Remove_Dir(vector<string> &path)
 
     Inode parent_directory_inode;
     FileSystem::Load_Inode(parent_directory_inode, parent_directory_inode_num);
-    // if (parent_directory_inode.i_mode == 0)
-    // {
-    //     cout << "Parent Directory Doesn't Exist!" << endl;
-    //     return;
-    // }
+
+    // Get the inode num of the directory which would be deleted
     vector<string> path0;
     path0.push_back(dir_name);
     int dir_inode_num = Get_Inode_Num(path0, parent_directory_inode_num);
+
     if (dir_inode_num == -1)
     {
         cout << "This Directory Doesn't Exist!" << endl;
     }
     else
     {
+
         Inode dir_inode;
         FileSystem::Load_Inode(dir_inode, dir_inode_num);
-        FileSystem::Free_Block(dir_inode.i_addr[0]);
-        FileSystem::Free_Inode(dir_inode_num);
-
-        Directory parent_dir;
-        DiskDriver::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+        if (dir_inode.i_mode == 0)
         {
-            int i=0;
-            while(string(parent_dir.d_filename[i]) != this_dir_name){
-                i++;
+            cout << "This Is a File, Not a Directory!'" << endl;
+        }
+        else
+        {
+            // Recursively remove the subdirectories and files contained by the directory which would be deleted
+            // If We don't recursively remove these stuffs, we cannot free the space they occupy
+            {
+                Directory dir;
+                DiskDriver::Read(dir_inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+
+                for (int i = 0; i < dir_inode.i_size; i++)
+                {
+                    string entry_name = string(dir.d_filename[i]);
+                    Inode entry_inode;
+                    FileSystem::Load_Inode(entry_inode, dir.d_inode_num[i]);
+
+                    vector<string> path_temp(path0);
+                    path_temp.push_back(entry_name);
+                    if (entry_inode.i_mode == 0)
+                    {
+                        Remove_File(path_temp);
+                    }
+                    else
+                    {
+                        Remove_Dir(path_temp);
+                    }
+
+                    FileSystem::Store_Inode(entry_inode, dir.d_inode_num[i]);
+                }
             }
-            while(i + 1 < parent_directory_inode.i_size){
-                strcpy(parent_dir.d_filename[i], parent_dir.d_filename[i + 1]);
-                i++;
+
+            // free the space occupied by this directory directly
+            FileSystem::Free_Block(dir_inode.i_addr[0]);
+            FileSystem::Free_Inode(dir_inode_num);
+
+            // Change the record stored by the parent directory
+            {
+                // Remove the record in parent directory's data region, that the datablock pointed by i_data[0]
+                Directory parent_dir;
+                DiskDriver::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+                {
+                    int i = 0;
+                    while (string(parent_dir.d_filename[i]) != dir_name)
+                    {
+                        i++;
+                    }
+                    while (i + 1 < parent_directory_inode.i_size)
+                    {
+                        strcpy(parent_dir.d_filename[i], parent_dir.d_filename[i + 1]);
+                        i++;
+                    }
+                }
+                DiskDriver::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+                parent_directory_inode.i_size--;
             }
         }
-        DiskDriver::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
-        parent_directory_inode.i_size--;
-        FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
+        FileSystem::Store_Inode(dir_inode, dir_inode_num);
     }
+
+    FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
 }
 
 void FileManager::Create_File(vector<string> &path)
@@ -239,6 +282,10 @@ void FileManager::Create_File(vector<string> &path)
             FileSystem::Store_Inode(inode, file_inode_num);
         }
     }
+}
+
+void FileManager::Remove_File(vector<string> &path){
+    
 }
 
 void FileManager::L_Seek(File &file, unsigned int pos)
