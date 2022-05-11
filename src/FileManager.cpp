@@ -8,7 +8,9 @@
 using namespace std;
 
 Directory g_cur_dir;
+std::map<std::string, File *> FileManager::f_open_map;
 extern SuperBlock g_superblock;
+
 // >= 0: vliad
 // == -1: invalid, this file or directory does not exist
 int Get_Inode_Num(vector<string> &path, int begin_inode_num)
@@ -226,7 +228,7 @@ void FileManager::Create_File(vector<string> &path)
 
 File *FileManager::Open_File(std::vector<std::string> &path)
 {
-
+    vector<string> path0 = path;
     // determine whether this file exists
     int inode_num = Get_Inode_Num(path);
     if (inode_num == -1)
@@ -245,9 +247,9 @@ File *FileManager::Open_File(std::vector<std::string> &path)
 
     // merge path component into a string, as is convenient to judge whether this file was already opened
     string path_string = "";
-    for (unsigned int i = 1; i < path.size(); i++)
+    for (unsigned int i = 1; i < path0.size(); i++)
     {
-        path_string += "/" + path[i];
+        path_string += "/" + path0[i];
     }
     // judge
     if (f_open_map.count(path_string) != 0)
@@ -267,6 +269,7 @@ File *FileManager::Open_File(std::vector<std::string> &path)
     f->f_offset = 0;
     f->f_offset = 0;
     f_open_map[path_string] = f;
+    cout << path_string << endl;
     return f;
 }
 
