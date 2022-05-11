@@ -35,9 +35,9 @@ void FileSystem::Init_SuperBlock()
 {
 
     g_superblock.s_inode_num = INODE_NUM;
-    g_superblock.s_free_inode_num = INODE_NUM;
+    g_superblock.s_free_inode_num = INODE_NUM - 1;
 
-    g_superblock.s_total_block_num = TOTAL_BLOCK_NUM;
+    g_superblock.s_total_block_num = TOTAL_BLOCK_NUM - 1;
     g_superblock.s_free_block_num = TOTAL_BLOCK_NUM;
 
     g_superblock.s_nfree = 1; // Init with 1
@@ -48,19 +48,20 @@ void FileSystem::Init_All_Free_Blocks()
 {
     unsigned int *stack = g_superblock.s_free;
     unsigned int &p_stk = g_superblock.s_nfree;
-    int p_data = DATA_BLOCK_START_INDEX + 1;
+    // int p_data = DATA_BLOCK_START_INDEX + 1;
+    int p_data = TOTAL_BLOCK_NUM - 1;
     // std::cout << "Enter init all free blocks" << std::endl;
-    while (p_data < TOTAL_BLOCK_NUM)
+    while (p_data > DATA_BLOCK_START_INDEX)
     {
         if (p_stk < MAX_NFREE)
         {
-            stack[p_stk++] = p_data++;
+            stack[p_stk++] = p_data--;
         }
         else
         {
             DiskDriver::Write(p_data * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
-            stack[0] = p_data++;
-            g_superblock.s_nfree = 1;
+            stack[0] = p_data--;
+            p_stk = 1;
         }
     }
 }
@@ -131,10 +132,11 @@ unsigned int FileSystem::Allocate_Block()
     {
         res = stack[0];
         DiskDriver::Read(res * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
+        p_stk = MAX_NFREE;
     }
 
     Store_SuperBlock();
-
+    cout << "Allocate Block No: " << res << endl;
     return res;
 }
 

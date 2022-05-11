@@ -323,7 +323,7 @@ void FileManager::Remove_File(vector<string> &path)
         FileSystem::Free_Block(file_inode.i_addr[0]);
 
         // calculate how many blocks this file use
-        unsigned int file_block_count = ceil(file_inode.i_size / BLOCK_SIZE);
+        unsigned int file_block_count = ceil(float(file_inode.i_size) / BLOCK_SIZE);
         // iteratively release space
         for (unsigned int i = 0; i < file_block_count; i++)
         {
@@ -476,18 +476,21 @@ unsigned int FileManager::Write_File(vector<string> &path, const char *content)
         while (length > 0)
         {
             // Caculate the size of blocks which are occupied by this file
-            unsigned int num_of_blk_occupied_by_this_file = inode.i_size / BLOCK_SIZE + 1;
+            unsigned int num_of_blk_occupied_by_this_file = ceil(float(inode.i_size) / BLOCK_SIZE);
             unsigned int temp = num_of_blk_occupied_by_this_file * BLOCK_SIZE;
 
             // Determine which phisical block would be written
             unsigned int blkno;
             if (offset < temp)
             {
+                cout << "Branch1: offset:" << offset << " temp: " << temp << endl;
                 // Find the block (whick is already allocated)
                 blkno = inode.Offset_To_Index(offset);
+                cout << blkno << endl;
             }
             else
             {
+                cout << "Branch2: offset:" << offset << " temp: " << temp << endl;
                 // Allocate a new block
                 blkno = FileSystem::Allocate_Block();
                 // Link this new block to the inode's index structure
@@ -499,17 +502,18 @@ unsigned int FileManager::Write_File(vector<string> &path, const char *content)
             unsigned int w_cnt_this_cycle = length < BLOCK_SIZE - offset_in_blk ? length : BLOCK_SIZE - offset_in_blk;
 
             // Write to disk
-            DiskDriver::Write(blkno * BLOCK_SIZE, ptr, w_cnt_this_cycle);
+            cout << "blkno: " << blkno << endl;
+            DiskDriver::Write(blkno * BLOCK_SIZE + offset_in_blk, ptr, w_cnt_this_cycle);
 
             // Update some variables
             length -= w_cnt_this_cycle;
             ptr += w_cnt_this_cycle;
             offset += w_cnt_this_cycle;
             total_wrriten_bytes += w_cnt_this_cycle;
-        }
 
-        // Chage the file's size
-        inode.i_size = offset > inode.i_size ? offset : inode.i_size;
+            // Chage the file's size
+            inode.i_size = (offset > inode.i_size) ? offset : inode.i_size;
+        }
 
         // Change the last modified time
         inode.i_time = time(NULL);
@@ -523,6 +527,8 @@ unsigned int FileManager::Write_File(vector<string> &path, const char *content)
 
 unsigned int FileManager::Read_File(vector<string> &path, char *content, int length)
 {
+    cout << "read length: " << length << endl;
+
     unsigned int total_read_bytes = 0;
 
     // Get file structure
@@ -534,16 +540,16 @@ unsigned int FileManager::Read_File(vector<string> &path, char *content, int len
     File *file = f_open_map[path_string];
     unsigned int &offset = file->f_offset;
 
+    // Get the inode
+    Inode inode;
+    FileSystem::Load_Inode(inode, file->f_inode_id);
+
     // Judge whether this read is feasible
-    unsigned int free_file_size = MAX_FILE_BLOCK_NUM * BLOCK_SIZE - offset;
+    unsigned int free_file_size = inode.i_size - offset;
     if (length > free_file_size)
     {
         cout << "Don't Try To Read More Than The File!" << endl;
     }
-
-    // Get the inode
-    Inode inode;
-    FileSystem::Load_Inode(inode, file->f_inode_id);
 
     // Read
     char *ptr = (char *)content;
@@ -558,7 +564,7 @@ unsigned int FileManager::Read_File(vector<string> &path, char *content, int len
         unsigned int r_cnt_this_cycle = length < BLOCK_SIZE - offset_in_blk ? length : BLOCK_SIZE - offset_in_blk;
 
         // Read from disk
-        DiskDriver::Read(blkno * BLOCK_SIZE, ptr, r_cnt_this_cycle);
+        DiskDriver::Read(blkno * BLOCK_SIZE + offset_in_blk, ptr, r_cnt_this_cycle);
 
         // Update some variables
         length -= r_cnt_this_cycle;

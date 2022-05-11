@@ -1,6 +1,8 @@
 #include "Inode.h"
 #include "FileSystem.h"
 #include <cmath>
+#include <iostream>
+using namespace std;
 unsigned int Inode::Offset_To_Index(unsigned int offset)
 {
     // offset to a1 a2 a3 a4
@@ -38,8 +40,9 @@ unsigned int Inode::Offset_To_Index(unsigned int offset)
 
 void Inode::Link(unsigned int physical_block_num)
 {
+
     // calculate how many physical blocks this file will occupy
-    unsigned int block_cnt = ceil(i_size / BLOCK_SIZE) + 1;
+    unsigned int block_cnt = ceil(float(i_size) / BLOCK_SIZE);
     if (block_cnt < DIRECT_PTR_NUM)
     {
         // level 1
