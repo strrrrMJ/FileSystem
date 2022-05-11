@@ -190,13 +190,13 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("cd")] = &Shell::Func_Cd;
     this->command_exec[string("create")] = &Shell::Func_Create;
     this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
-<<<<<<< HEAD
+
     this->command_exec[string("help")] = &Shell::Func_help;
-=======
+
     this->command_exec[string("open")] = &Shell::Func_Open;
     this->command_exec[string("openlist")] = &Shell::Func_Openlist;
     this->command_exec[string("close")] = &Shell::Func_Close;
->>>>>>> 3061ef49dbf050a66a328c6536ad788f0ac930ee
+
 }
 
 void Shell::Prompt()
