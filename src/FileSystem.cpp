@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdint>
 #include <cstring>
+
 SuperBlock g_superblock;
 
 void FileSystem::Load_SuperBlock()
@@ -33,7 +34,7 @@ void FileSystem::Init_All_Free_Blocks()
     unsigned int *stack = g_superblock.s_free;
     unsigned int &p_stk = g_superblock.s_nfree;
     int p_data = DATA_BLOCK_START_INDEX + 1;
-    std::cout << "Enter init all free blocks" << std::endl;
+    // std::cout << "Enter init all free blocks" << std::endl;
     while (p_data < TOTAL_BLOCK_NUM)
     {
         if (p_stk < MAX_NFREE)

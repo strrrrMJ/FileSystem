@@ -130,6 +130,7 @@ void FileManager::Remove_Dir(vector<string> &path)
         return;
     }
     string dir_name = path[path.size() - 1];
+    string this_dir_name = path[path.size() - 1];
     path.pop_back();
     int parent_directory_inode_num = Get_Inode_Num(path);
     if (parent_directory_inode_num == -1)
@@ -159,6 +160,19 @@ void FileManager::Remove_Dir(vector<string> &path)
         FileSystem::Free_Block(dir_inode.i_addr[0]);
         FileSystem::Free_Inode(dir_inode_num);
 
+        Directory parent_dir;
+        DiskDriver::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+        {
+            int i=0;
+            while(string(parent_dir.d_filename[i]) != this_dir_name){
+                i++;
+            }
+            while(i + 1 < parent_directory_inode.i_size){
+                strcpy(parent_dir.d_filename[i], parent_dir.d_filename[i + 1]);
+                i++;
+            }
+        }
+        DiskDriver::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
         parent_directory_inode.i_size--;
         FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
     }
@@ -242,6 +256,7 @@ unsigned int FileManager::Write_File(File &file, const char *content)
     return -1;
 }
 
-unsigned int FileManager::Read_File(File &file, char *content, int length){
+unsigned int FileManager::Read_File(File &file, char *content, int length)
+{
     return -1;
 }
