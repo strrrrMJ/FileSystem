@@ -30,7 +30,9 @@ public:
 
     static unsigned int Write_File(File &file, const char *content);
 
-    unsigned int Read_File(File &file, char *content, int length);
+    static unsigned int Read_File(File &file, char *content, int length);
+
+    // static void Init_Some_Dir();
 
     // void Edit_File_Permission();
 };
