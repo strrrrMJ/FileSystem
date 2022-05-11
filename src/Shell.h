@@ -13,6 +13,9 @@
 void Func_Exit();
 class Shell
 {
+private:
+    void Recursive_Helper_Of_Func_Tree(int, std::vector<std::string> &);
+
 public:
     Directory current_dirrectory;
     std::vector<std::string> args;
@@ -42,6 +45,8 @@ public:
     void Func_Read();
     void Func_Seekg();
     void Func_help();
+    void Func_Help();
+    void Func_Tree();
 
     void Func_Openlist();
 
