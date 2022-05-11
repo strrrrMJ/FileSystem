@@ -14,7 +14,7 @@ static const unsigned int TER_PTR_NUM = 2;
 
 class Inode
 {
-private:
+public:
     enum Mode
     {
         IsDir = 0x1,

@@ -7,7 +7,7 @@
 
 class FileManager
 {
-private:
+public:
     bool Dir_Name_Conflict(std::string dir_name);
 
 public:
@@ -25,7 +25,7 @@ public:
 
     static unsigned int Write_File(File &file, const char *content);
 
-    static unsigned int Read_File(File &file, char *content, int length);
+    unsigned int Read_File(File &file, char *content, int length);
 
     // void Edit_File_Permission();
 };

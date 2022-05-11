@@ -43,14 +43,18 @@ void FileManager::L_Seek(File &file, unsigned int pos)
     FileSystem::Store_Inode(inode,file.f_inode_id);
 }
 
-unsigned int FileManager::Write_File(File &file, const char *content)
-{
-    Inode inode;
-    FileSystem::Load_Inode(inode,file.f_inode_id);
+// unsigned int FileManager::Write_File(File &file, const char *content)
+// {
+//     Inode inode;
+//     FileSystem::Load_Inode(inode,file.f_inode_id);
 
 
 
-    FileSystem::Store_Inode(inode,file.f_inode_id);
+//     FileSystem::Store_Inode(inode,file.f_inode_id);
 
+//     return -1;
+// }
+
+unsigned int FileManager::Read_File(File &file, char *content, int length){
     return -1;
 }
