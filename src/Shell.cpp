@@ -449,6 +449,101 @@ void Shell::Func_Logout()
     g_user.uid = (unsigned short)(-1);
 }
 
+void Shell::Func_Register()
+{
+
+    // read passwd file
+    vector<string> register_file_path;
+    register_file_path.push_back(string("root"));
+    register_file_path.push_back(string("etc"));
+    register_file_path.push_back(string("passwd"));
+    FileManager::Open_File(register_file_path);
+    FileManager::L_Seek(register_file_path, 0);
+
+    // read out how many user this system have now
+    unsigned int usr_num;
+    FileManager::Read_File(register_file_path, (char *)&usr_num, sizeof(unsigned int));
+
+    // new_usr.uid = usr_num;
+
+    unsigned int i = 0;
+    for (; i < usr_num; i++)
+    {
+        // read out a record
+        User read_usr_tmp;
+        FileManager::Read_File(register_file_path, (char *)&read_usr_tmp, sizeof(User));
+
+        // if new username has been already created
+        // register new user failed
+        if (string(read_usr_tmp.username) == args[1])
+        {
+            cout << "User Already Exists!" << endl;
+            break;
+        }
+    }
+
+    if (i == usr_num)
+    {
+
+        if (args[1].length() > 14 || args[2].length() > 14)
+        {
+            cout << "Username Or Password Too Long!" << endl;
+        }
+        else
+        {
+            // create new User
+            User new_usr;
+            new_usr.gid = 1;
+            new_usr.uid = usr_num++;
+            strcpy(new_usr.username, args[1].c_str());
+            strcpy(new_usr.password, args[2].c_str());
+
+            // write number of user
+            FileManager::L_Seek(register_file_path, 0);
+            FileManager::Write_File(register_file_path, (char *)&usr_num, sizeof(unsigned int));
+
+            // write new record of new user
+            FileManager::L_Seek(register_file_path, sizeof(unsigned int) + (usr_num - 1) * sizeof(User));
+            FileManager::Write_File(register_file_path, (char *)&new_usr, sizeof(User));
+
+            // create new user directory
+            vector<string> new_directory_path;
+            new_directory_path.push_back(string("root"));
+            new_directory_path.push_back(string("Users"));
+            new_directory_path.push_back(args[1]);
+            FileManager::Create_Dir(new_directory_path);
+        }
+    }
+
+    FileManager::Close_File(register_file_path);
+
+    //
+}
+
+void Shell::Func_Userlist()
+{
+    vector<string> register_file_path;
+    register_file_path.push_back(string("root"));
+    register_file_path.push_back(string("etc"));
+    register_file_path.push_back(string("passwd"));
+    FileManager::Open_File(register_file_path);
+    FileManager::L_Seek(register_file_path, 0);
+
+    unsigned int usr_num;
+    FileManager::Read_File(register_file_path, (char *)&usr_num, sizeof(unsigned int));
+
+    cout << "This System Has " << usr_num << " Registered Users Now:" << endl;
+    for (unsigned int i = 0; i < usr_num; i++)
+    {
+        User read_usr_tmp;
+        FileManager::Read_File(register_file_path, (char *)&read_usr_tmp, sizeof(User));
+
+        cout << read_usr_tmp.username << endl;
+    }
+
+    FileManager::Close_File(register_file_path);
+}
+
 void Shell::Init_Command_Exec()
 {
     this->command_exec[string("ls")] = &Shell::Func_Ls;
@@ -467,6 +562,8 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("seekg")] = &Shell::Func_Seekg;
     this->command_exec[string("tree")] = &Shell::Func_Tree;
     this->command_exec[string("logout")] = &Shell::Func_Logout;
+    this->command_exec[string("register")] = &Shell::Func_Register;
+    this->command_exec[string("userlist")] = &Shell::Func_Userlist;
 }
 
 void Shell::Prompt()
