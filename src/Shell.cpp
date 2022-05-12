@@ -41,7 +41,7 @@ string Shell::Get_Tree_Display_String(File_Tree *node, unsigned int n, std::vect
     {
         for (unsigned int i = 0; i < node->child.size(); i++)
         {
-            unsigned status = 0;
+            unsigned int status = 0;
             if (i == node->child.size() - 1)
             {
                 status = 1;

@@ -136,7 +136,6 @@ unsigned int FileSystem::Allocate_Block()
     }
 
     Store_SuperBlock();
-    cout << "Allocate Block No: " << res << endl;
     return res;
 }
 

@@ -176,11 +176,7 @@ void FileManager::Remove_Dir(vector<string> &path)
                     FileSystem::Load_Inode(entry_inode, dir.d_inode_num[i]);
                     vector<string> path_temp(path_current_absolute);
                     path_temp.push_back(entry_name);
-                    for (auto item : path_temp)
-                    {
-                        cout << item << " ";
-                    }
-                    cout << endl;
+
                     if (entry_inode.i_mode == 0)
                     {
                         Remove_File(path_temp);
@@ -416,7 +412,7 @@ void FileManager::Close_File(vector<string> &path)
     // if it hasn't been opened
     if (f_open_map.count(path_string) == 0)
     {
-        cout << "this file is not opened!" << endl;
+        cout << "This File Is Not Opened!" << endl;
     }
     else
     {
@@ -425,7 +421,7 @@ void FileManager::Close_File(vector<string> &path)
 
         f_open_map.erase(path_string);
 
-        cout << "close file successfully!" << endl;
+        cout << "Close File Successfully!" << endl;
     }
 }
 
@@ -508,14 +504,11 @@ unsigned int FileManager::Write_File(vector<string> &path, const char *content)
                 unsigned int blkno;
                 if (offset < temp)
                 {
-                    cout << "Branch1: offset:" << offset << " temp: " << temp << endl;
                     // Find the block (whick is already allocated)
                     blkno = inode.Offset_To_Index(offset);
-                    cout << blkno << endl;
                 }
                 else
                 {
-                    cout << "Branch2: offset:" << offset << " temp: " << temp << endl;
                     // Allocate a new block
                     blkno = FileSystem::Allocate_Block();
                     // Link this new block to the inode's index structure
@@ -527,7 +520,6 @@ unsigned int FileManager::Write_File(vector<string> &path, const char *content)
                 unsigned int w_cnt_this_cycle = length < BLOCK_SIZE - offset_in_blk ? length : BLOCK_SIZE - offset_in_blk;
 
                 // Write to disk
-                cout << "blkno: " << blkno << endl;
                 DiskDriver::Write(blkno * BLOCK_SIZE + offset_in_blk, ptr, w_cnt_this_cycle);
 
                 // Update some variables
@@ -553,7 +545,7 @@ unsigned int FileManager::Write_File(vector<string> &path, const char *content)
 
 unsigned int FileManager::Read_File(vector<string> &path, char *content, int length)
 {
-    cout << "read length: " << length << endl;
+    cout << "Read Length: " << length << endl;
 
     unsigned int total_read_bytes = 0;
 
