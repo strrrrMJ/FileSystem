@@ -15,7 +15,7 @@ extern SuperBlock g_superblock;
 
 // >= 0: vliad
 // == -1: invalid, this file or directory does not exist
-int Get_Inode_Num(vector<string> &path, int begin_inode_num)
+int Get_Inode_Num(vector<string> path, int begin_inode_num)
 {
     if (path.size() == 0)
     {
@@ -53,7 +53,7 @@ int Get_Inode_Num(vector<string> &path, int begin_inode_num)
     }
 }
 
-void FileManager::Create_Dir(vector<string> &path)
+void FileManager::Create_Dir(vector<string> path)
 {
     if (path.size() < 2)
     {
@@ -123,7 +123,7 @@ void FileManager::Create_Dir(vector<string> &path)
 }
 
 // Recursively delete
-void FileManager::Remove_Dir(vector<string> &path)
+void FileManager::Remove_Dir(vector<string> path)
 {
     if (path.size() < 2)
     {
@@ -222,7 +222,7 @@ void FileManager::Remove_Dir(vector<string> &path)
     FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
 }
 
-void FileManager::Create_File(vector<string> &path)
+void FileManager::Create_File(vector<string> path)
 {
     if (path.size() < 2)
     {
@@ -285,8 +285,10 @@ void FileManager::Create_File(vector<string> &path)
     }
 }
 
-void FileManager::Remove_File(vector<string> &path)
+void FileManager::Remove_File(vector<string> path)
 {
+    vector<string> path_tmp(path);
+
     if (path.size() < 2)
     {
         cout << "Wrong Instruction!" << endl;
@@ -310,42 +312,61 @@ void FileManager::Remove_File(vector<string> &path)
 
     if (file_inode_num == -1)
     {
-        cout << "This Directory Doesn't Exist!" << endl;
+        cout << "This File Doesn't Exist!" << endl;
     }
     else
     {
-        Inode file_inode;
-        FileSystem::Load_Inode(file_inode, file_inode_num);
 
-        // release all space
-        file_inode.Free_All_Space();
-
-        FileSystem::Free_Inode(file_inode_num);
-
-        // modify parent directory file
-        Directory parent_dir;
-        DiskDriver::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+        // merge path component into a string, as is convenient to judge whether this file was already opened
+        string path_string = "";
+        for (unsigned int i = 1; i < path_tmp.size(); i++)
         {
-            int i = 0;
-            while (string(parent_dir.d_filename[i]) != file_name)
-            {
-                i++;
-            }
-            while (i + 1 < parent_directory_inode.i_size)
-            {
-                strcpy(parent_dir.d_filename[i], parent_dir.d_filename[i + 1]);
-                parent_dir.d_inode_num[i] = parent_dir.d_inode_num[i + 1];
-                i++;
-            }
+            path_string += "/" + path_tmp[i];
         }
-        DiskDriver::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
 
-        parent_directory_inode.i_size--;
-        FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
+        // Judge whether this file is already closed
+        if (f_open_map.count(path_string))
+        {
+            cout << "This File Hasn't Been Closed! You Should Close It Before Removing!" << endl;
+            return;
+        }
+        else
+        {
+            Inode file_inode;
+            FileSystem::Load_Inode(file_inode, file_inode_num);
+
+            // release all space
+            file_inode.Free_All_Space();
+
+            FileSystem::Free_Inode(file_inode_num);
+
+            // modify parent directory file
+            Directory parent_dir;
+            DiskDriver::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+            {
+                int i = 0;
+                while (string(parent_dir.d_filename[i]) != file_name)
+                {
+                    i++;
+                }
+                while (i + 1 < parent_directory_inode.i_size)
+                {
+                    strcpy(parent_dir.d_filename[i], parent_dir.d_filename[i + 1]);
+                    parent_dir.d_inode_num[i] = parent_dir.d_inode_num[i + 1];
+                    i++;
+                }
+            }
+            DiskDriver::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+
+            parent_directory_inode.i_size--;
+            FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
+
+            cout << "Successfully Removing This File!" << endl;
+        }
     }
 }
 
-File *FileManager::Open_File(vector<string> &path)
+File *FileManager::Open_File(vector<string> path)
 {
     vector<string> path0 = path;
     // determine whether this file exists
@@ -401,7 +422,7 @@ void FileManager::Open_File_List()
     }
 }
 
-void FileManager::Close_File(vector<string> &path)
+void FileManager::Close_File(vector<string> path)
 {
     // merge path component into a string
     string path_string = "";
@@ -425,7 +446,7 @@ void FileManager::Close_File(vector<string> &path)
     }
 }
 
-void FileManager::L_Seek(vector<string> &path, unsigned int pos)
+void FileManager::L_Seek(vector<string> path, unsigned int pos)
 {
     string path_string = "";
     for (unsigned int i = 1; i < path.size(); i++)
@@ -454,7 +475,7 @@ void FileManager::L_Seek(vector<string> &path, unsigned int pos)
     }
 }
 
-unsigned int FileManager::Write_File(vector<string> &path, const char *content)
+unsigned int FileManager::Write_File(vector<string> path, const char *content)
 {
     unsigned int total_wrriten_bytes = 0;
 
@@ -543,7 +564,15 @@ unsigned int FileManager::Write_File(vector<string> &path, const char *content)
     return total_wrriten_bytes;
 }
 
-unsigned int FileManager::Read_File(vector<string> &path, char *content, int length)
+unsigned int FileManager::Get_File_Size(vector<string> path)
+{
+    unsigned int inode_num = Get_Inode_Num(path);
+    Inode inode;
+    FileSystem::Load_Inode(inode, inode_num);
+    return inode.i_size;
+}
+
+unsigned int FileManager::Read_File(vector<string> path, char *content, int length)
 {
     cout << "Read Length: " << length << endl;
 
