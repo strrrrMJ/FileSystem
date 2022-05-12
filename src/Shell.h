@@ -55,6 +55,7 @@ private:
     void Func_Help();
     void Func_Tree();
     void Func_Logout();
+    void Func_Chmod();
     void Func_Register();
     void Func_Userlist();
 

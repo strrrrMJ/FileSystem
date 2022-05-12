@@ -12,6 +12,7 @@ using namespace std;
 Directory g_cur_dir;
 std::map<std::string, File *> FileManager::f_open_map;
 extern SuperBlock g_superblock;
+extern User g_user;
 
 // >= 0: vliad
 // == -1: invalid, this file or directory does not exist
@@ -91,9 +92,9 @@ void FileManager::Create_Dir(vector<string> path)
             inode.i_mode = 1;
             inode.i_number = dir_inode_num;
             inode.i_count = 0;
-            inode.i_permission = 0;
-            inode.i_uid = 0;
-            inode.i_gid = 0;
+            inode.i_permission = 7 * 64 + 5 * 8 + 5;
+            inode.i_uid = g_user.uid;
+            inode.i_gid = g_user.gid;
             time_t t;
             time(&t);
             inode.i_time = t;
@@ -260,9 +261,9 @@ void FileManager::Create_File(vector<string> path)
             inode.i_mode = 0;
             inode.i_number = file_inode_num;
             inode.i_count = 0;
-            inode.i_permission = 0;
-            inode.i_uid = 0;
-            inode.i_gid = 0;
+            inode.i_permission = 6 * 64 + 4 * 8 + 4;
+            inode.i_uid = g_user.uid;
+            inode.i_gid = g_user.gid;
             time_t t;
             time(&t);
             inode.i_time = t;
@@ -335,6 +336,23 @@ void FileManager::Remove_File(vector<string> path)
             Inode file_inode;
             FileSystem::Load_Inode(file_inode, file_inode_num);
 
+            // Verify the permission
+            if (file_inode.i_gid != g_user.gid && (file_inode.i_permission & Inode::ELSE_W) == false && g_user.uid != 0)
+            {
+                cout << "Current User Doesn't Have Permission To Delete!" << endl;
+                return;
+            }
+            if (file_inode.i_uid != g_user.uid && (file_inode.i_permission & Inode::GROUP_W) == false && g_user.uid != 0)
+            {
+                cout << "Current User Doesn't Have Permission To Delete!" << endl;
+                return;
+            }
+            if ((file_inode.i_permission & Inode::Owner_W) == false && g_user.uid != 0)
+            {
+                cout << "Current User Doesn't Have Permission To Delete!" << endl;
+                return;
+            }
+
             // release all space
             file_inode.Free_All_Space();
 
@@ -382,6 +400,23 @@ File *FileManager::Open_File(vector<string> path)
     if (inode.i_mode == 1)
     {
         // it's directory
+        return NULL;
+    }
+
+    // Verify the permission
+    if (inode.i_gid != g_user.gid && (inode.i_permission & Inode::ELSE_R) == false && g_user.uid != 0)
+    {
+        // cout << "Current User Doesn't Have Permission To Open!" << endl;
+        return NULL;
+    }
+    if (inode.i_uid != g_user.uid && (inode.i_permission & Inode::GROUP_R) == false && g_user.uid != 0)
+    {
+        // cout << "Current User Doesn't Have Permission To Open!" << endl;
+        return NULL;
+    }
+    if ((inode.i_permission & Inode::Owner_R) == false && g_user.uid != 0)
+    {
+        // cout << "Current User Doesn't Have Permission To Open!" << endl;
         return NULL;
     }
 
@@ -512,6 +547,23 @@ unsigned int FileManager::Write_File(vector<string> path, const char *content, u
             Inode inode;
             FileSystem::Load_Inode(inode, file->f_inode_id);
 
+            // Verify the permission
+            if ((inode.i_gid != g_user.gid && inode.i_permission & Inode::ELSE_W) == false && g_user.uid != 0)
+            {
+                cout << "Current User Doesn't Have Permission To Write!" << endl;
+                return 0;
+            }
+            if ((inode.i_uid != g_user.uid && inode.i_permission & Inode::GROUP_W) == false && g_user.uid != 0)
+            {
+                cout << "Current User Doesn't Have Permission To Write!" << endl;
+                return 0;
+            }
+            if ((inode.i_permission & Inode::Owner_W) == false && g_user.uid != 0)
+            {
+                cout << "Current User Doesn't Have Permission To Write!" << endl;
+                return 0;
+            }
+
             // Write
             char *ptr = (char *)content;
             while (length > 0)
@@ -593,6 +645,23 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
         // Get the inode
         Inode inode;
         FileSystem::Load_Inode(inode, file->f_inode_id);
+
+        // Verify the permission
+        if (inode.i_gid != g_user.gid && (inode.i_permission & Inode::ELSE_R) == false && g_user.uid != 0)
+        {
+            cout << "Current User Doesn't Have Permission To Read!" << endl;
+            return 0;
+        }
+        if (inode.i_uid != g_user.uid && (inode.i_permission & Inode::GROUP_R) == false && g_user.uid != 0)
+        {
+            cout << "Current User Doesn't Have Permission To Read!" << endl;
+            return 0;
+        }
+        if ((inode.i_permission & Inode::Owner_R) == false && g_user.uid != 0)
+        {
+            cout << "Current User Doesn't Have Permission To Read!" << endl;
+            return 0;
+        }
 
         // Judge whether this read is feasible
         unsigned int free_file_size = inode.i_size - offset;
