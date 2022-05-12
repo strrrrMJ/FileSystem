@@ -1,10 +1,13 @@
 #include "Shell.h"
+
 #include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
 #include <time.h>
 #include <string.h>
+#include <fstream>
+
 using namespace std;
 extern FileSystem g_filesystem;
 
@@ -13,7 +16,8 @@ string Shell::Get_Tree_Display_String(File_Tree *node, unsigned int n, std::vect
     string tree_string = "";
     if (n == 0)
     {
-        tree_string = "File Structure:\n";
+        // tree_string = "File Structure:\n";
+        tree_string = "";
         tree_string += "  " + node->name + "\n";
     }
     else
@@ -158,9 +162,6 @@ void Shell::Func_Tree()
         vector<unsigned int> nodeStatusList;
         string output_string = Get_Tree_Display_String(file_tree, 0, nodeStatusList);
         cout << output_string;
-    }
-    else if (args[1] == "-L")
-    {
     }
     else
     {
@@ -359,7 +360,25 @@ void Shell::Func_Write()
     Parse_Path(args[1], path_t);
     vector<string> path;
     Transform_Path(path_t, path);
-    FileManager::Write_File(path, args[2].c_str());
+
+    if (args[2] == "-f")
+    {
+        fstream fp(args[3]);
+        if (!fp)
+        {
+            cout << "Origin File Doesn't Exist!" << endl;
+        }
+        else
+        {
+            string content((istreambuf_iterator<char>(fp)), istreambuf_iterator<char>());
+            FileManager::Write_File(path, content.c_str());
+            fp.close();
+        }
+    }
+    else if (args[2] == "-s")
+    {
+        FileManager::Write_File(path, args[3].c_str());
+    }
 }
 
 void Shell::Func_Read()
@@ -368,10 +387,43 @@ void Shell::Func_Read()
     Parse_Path(args[1], path_t);
     vector<string> path;
     Transform_Path(path_t, path);
-    const int MAX_CONTENT_LEN = 500;
-    char content[MAX_CONTENT_LEN];
-    FileManager::Read_File(path, content, atoi(args[2].c_str()));
-    cout << content << endl;
+
+    if (args[2] == "-f")
+    {
+        fstream fp(args[3]);
+        if (!fp)
+        {
+            cout << "Target File Doesn't Exist!" << endl;
+        }
+        else
+        {
+            // Because we want to read the whole file
+            FileManager::L_Seek(path, 0);
+
+            // This is the buffer
+            const int BUF_LEN = 500;
+            char buf[BUF_LEN];
+
+            //Total bytes
+            int bytes_remained = FileManager::Get_File_Size(path);
+
+            while (bytes_remained > 0)
+            {
+                int bytes_this_cycle = BUF_LEN < bytes_remained ? BUF_LEN : bytes_remained;
+                FileManager::Read_File(path, buf, bytes_this_cycle);
+                fp.write(buf, bytes_this_cycle);
+                bytes_remained -= bytes_this_cycle;
+            }
+            fp.close();
+        }
+    }
+    else if (args[2] == "-s")
+    {
+        const int MAX_CONTENT_LEN = 500;
+        char content[MAX_CONTENT_LEN];
+        FileManager::Read_File(path, content, atoi(args[3].c_str()));
+        cout << content << endl;
+    }
 }
 void Shell::Func_Seekg()
 {
