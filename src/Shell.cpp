@@ -450,7 +450,6 @@ void Shell::Func_Logout()
     g_user.uid = (unsigned short)(-1);
 }
 
-<<<<<<< HEAD
 void Shell::Func_Chmod()
 {
     // Get the path vector
@@ -517,7 +516,8 @@ void Shell::Func_Chmod()
     inode.i_permission = new_permission;
 
     FileSystem::Store_Inode(inode, inode_num);
-=======
+}
+
 void Shell::Func_Register()
 {
 
@@ -611,7 +611,6 @@ void Shell::Func_Userlist()
     }
 
     FileManager::Close_File(register_file_path);
->>>>>>> 296b84d7ca5e84fb4092cafde404af9c9a1a1953
 }
 
 void Shell::Init_Command_Exec()
