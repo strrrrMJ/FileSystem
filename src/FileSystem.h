@@ -5,7 +5,8 @@
 #include "DiskDriver.h"
 #include "Inode.h"
 #include "Directory.h"
-
+#include "User.h"
+#include <string>
 // The Disk Layout
 static const unsigned int BLOCK_SIZE = 512;
 
@@ -23,7 +24,7 @@ static const unsigned int INODE_START_INDEX = BITMAP_START_INDEX + (BITMAP_SIZE 
 static const unsigned int DATA_BLOCK_START_INDEX = INODE_START_INDEX + (INODE_NUM * INODE_SIZE - 1) / BLOCK_SIZE + 1;
 static const unsigned int DATA_BLOCK_NUM = 2 * 1024 * 128;
 
-static const unsigned int TOTAL_BLOCK_NUM = (DATA_BLOCK_NUM + DATA_BLOCK_START_INDEX);//Almost 128MB
+static const unsigned int TOTAL_BLOCK_NUM = (DATA_BLOCK_NUM + DATA_BLOCK_START_INDEX); // Almost 128MB
 static const unsigned int DISK_SIZE = (TOTAL_BLOCK_NUM * BLOCK_SIZE) / (1024 * 1024);
 
 class FileSystem
@@ -59,6 +60,10 @@ public:
     static void Boot();
 
     static void Init_Some_Dir();
+
+    static void Init_Register();
+
+    static User Check_User(std::string, std::string);
 
 public:
     friend class FileManager;

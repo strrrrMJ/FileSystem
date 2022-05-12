@@ -7,6 +7,7 @@
 using namespace std;
 
 FileSystem g_filesystem;
+User g_user;
 
 int main()
 {

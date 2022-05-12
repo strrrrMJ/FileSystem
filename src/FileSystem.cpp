@@ -12,7 +12,7 @@ SuperBlock g_superblock;
 
 void FileSystem::Init_Some_Dir()
 {
-    vector<string> list = {"bin", "Users", "dev", "opt", "sbin", "tmp", "usr", "var"};
+    vector<string> list = {"bin", "Users", "dev", "opt", "sbin", "tmp", "usr", "etc"};
     for (auto i : list)
     {
         vector<string> path = {"root"};
@@ -98,6 +98,71 @@ void FileSystem::Init_Root()
     FileSystem::Store_Inode(inode, 0);
 }
 
+void FileSystem::Init_Register()
+{
+    // create register file
+    vector<string> register_file_path;
+    register_file_path.push_back(string("root"));
+    register_file_path.push_back(string("etc"));
+    register_file_path.push_back(string("passwd"));
+    FileManager::Create_File(register_file_path);
+
+    // open it
+    FileManager::Open_File(register_file_path);
+
+    // initialize number of user to 1
+    unsigned int usr_cnt = 1;
+    FileManager::Write_File(register_file_path, (char *)&usr_cnt, sizeof(unsigned int));
+
+    // add root into this file
+    User root;
+    root.gid = 0;
+    root.uid = 0;
+    strcpy(root.username, "root");
+    strcpy(root.password, "root");
+    FileManager::Write_File(register_file_path, (char *)&root, sizeof(User));
+
+    // close it
+    FileManager::Close_File(register_file_path);
+}
+
+User FileSystem::Check_User(std::string username, std::string password)
+{
+    // open file
+    vector<string> register_file_path;
+    register_file_path.push_back(string("root"));
+    register_file_path.push_back(string("etc"));
+    register_file_path.push_back(string("passwd"));
+    FileManager::Open_File(register_file_path);
+
+    // read out how many user this system have now
+    unsigned int usr_num;
+    FileManager::Read_File(register_file_path, (char *)&usr_num, sizeof(unsigned int));
+
+    User res;
+    res.uid = -1;
+    cout << usr_num << endl;
+    // read out every record and compare with given username and password
+    for (unsigned int i = 0; i < usr_num; i++)
+    {
+        // read out
+        User read_usr_tmp;
+        FileManager::Read_File(register_file_path, (char *)&read_usr_tmp, sizeof(User));
+
+        // if both match
+        if (string(read_usr_tmp.username) == username && string(read_usr_tmp.password) == password)
+        {
+            res = read_usr_tmp;
+            break;
+        }
+    }
+
+    // close file
+    FileManager::Close_File(register_file_path);
+
+    return res;
+}
+
 void FileSystem::Format_Disk()
 {
     if (DiskDriver::Exists() == false)
@@ -115,6 +180,8 @@ void FileSystem::Format_Disk()
     Store_SuperBlock();
 
     Init_Some_Dir();
+
+    Init_Register();
 }
 
 unsigned int FileSystem::Allocate_Block()

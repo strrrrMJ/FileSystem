@@ -10,6 +10,7 @@
 
 using namespace std;
 extern FileSystem g_filesystem;
+extern User g_user;
 
 string Shell::Get_Tree_Display_String(File_Tree *node, unsigned int n, std::vector<unsigned int> &nodeStatusList)
 {
@@ -464,7 +465,7 @@ void Shell::Init_Command_Exec()
 void Shell::Prompt()
 {
     // string work_directory = "/usr/local/bin";
-    printf("\n# %s in %s\n$ ", this->usr_name.c_str(), current_path.c_str());
+    printf("\n# %s in %s\n$ ", g_user.username, current_path.c_str());
 }
 
 void Shell::Get_Command()
@@ -530,23 +531,37 @@ void Shell::Log_In()
         getline(cin, usr);
         cout << "Input Password: ";
         getline(cin, psw);
-        if (usr == "root")
+        User user = FileSystem::Check_User(usr, psw);
+
+        // if (usr == "root")
+        // {
+        //     if (psw == "root")
+        //     {
+        //         this->usr_name = usr;
+        //         break;
+        //     }
+        // }
+        // else if (usr == "Bob")
+        // {
+        //     if (psw == "123456")
+        //     {
+        //         this->usr_name = usr;
+        //         break;
+        //     }
+        // }
+
+        // wrong username or password
+        if (user.uid == -1)
         {
-            if (psw == "root")
-            {
-                this->usr_name = usr;
-                break;
-            }
+            cout << "Please Check Your ID and Password, and Try Again!" << endl;
         }
-        else if (usr == "Bob")
+        // log in successfully
+        else
         {
-            if (psw == "123456")
-            {
-                this->usr_name = usr;
-                break;
-            }
+            g_user = user;
+            cout << "Log In Successfully";
+            break;
         }
-        cout << "Please Check Your ID and Password, and Try Again!" << endl;
     }
 }
 
