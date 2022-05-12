@@ -475,7 +475,7 @@ void FileManager::L_Seek(vector<string> path, unsigned int pos)
     }
 }
 
-unsigned int FileManager::Write_File(vector<string> path, const char *content)
+unsigned int FileManager::Write_File(vector<string> path, const char *content, unsigned int length)
 {
     unsigned int total_wrriten_bytes = 0;
 
@@ -495,7 +495,6 @@ unsigned int FileManager::Write_File(vector<string> path, const char *content)
         unsigned int &offset = file->f_offset;
 
         // Judge whether this write is feasible
-        unsigned int length = strlen(content);
         unsigned int free_blocks_size = g_superblock.s_free_block_num * BLOCK_SIZE;
         unsigned int free_file_size = MAX_FILE_BLOCK_NUM * BLOCK_SIZE - offset;
 
@@ -574,8 +573,6 @@ unsigned int FileManager::Get_File_Size(vector<string> path)
 
 unsigned int FileManager::Read_File(vector<string> path, char *content, int length)
 {
-    cout << "Read Length: " << length << endl;
-
     unsigned int total_read_bytes = 0;
 
     // Get file structure

@@ -363,21 +363,31 @@ void Shell::Func_Write()
 
     if (args[2] == "-f")
     {
-        fstream fp(args[3]);
+        fstream fp(args[3], ios::binary | ios::in);
         if (!fp)
         {
             cout << "Origin File Doesn't Exist!" << endl;
         }
         else
         {
-            string content((istreambuf_iterator<char>(fp)), istreambuf_iterator<char>());
-            FileManager::Write_File(path, content.c_str());
+            fp.seekg(0, ios::end);
+            unsigned int read_length = fp.tellg();
+            fp.seekg(0, ios::beg);
+
+            char *content = new char[read_length];
+
+            fp.read(content, read_length);
+
+            FileManager::Write_File(path, content, read_length);
+
+            delete content;
+
             fp.close();
         }
     }
     else if (args[2] == "-s")
     {
-        FileManager::Write_File(path, args[3].c_str());
+        FileManager::Write_File(path, args[3].c_str(), args[3].length());
     }
 }
 
@@ -390,32 +400,31 @@ void Shell::Func_Read()
 
     if (args[2] == "-f")
     {
-        fstream fp(args[3]);
+        fstream fp;
+        fp.open(args[3], ios::out | ios::binary);
         if (!fp)
         {
-            cout << "Target File Doesn't Exist!" << endl;
+            throw "Failed To Create Target File!";
         }
-        else
-        {
-            // Because we want to read the whole file
-            FileManager::L_Seek(path, 0);
+        // Because we want to read the whole file
+        FileManager::L_Seek(path, 0);
 
-            // This is the buffer
-            const int BUF_LEN = 500;
-            char buf[BUF_LEN];
+        // calculate how many bytes will be read and write
+        int bytes_remained = FileManager::Get_File_Size(path);
 
-            //Total bytes
-            int bytes_remained = FileManager::Get_File_Size(path);
+        // allocate
+        char *content = new char[bytes_remained];
 
-            while (bytes_remained > 0)
-            {
-                int bytes_this_cycle = BUF_LEN < bytes_remained ? BUF_LEN : bytes_remained;
-                FileManager::Read_File(path, buf, bytes_this_cycle);
-                fp.write(buf, bytes_this_cycle);
-                bytes_remained -= bytes_this_cycle;
-            }
-            fp.close();
-        }
+        // read from MyDisk.img
+        FileManager::Read_File(path, content, bytes_remained);
+
+        // write to output file
+        fp.write(content, bytes_remained);
+
+        // release
+        delete content;
+
+        fp.close();
     }
     else if (args[2] == "-s")
     {

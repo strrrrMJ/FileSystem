@@ -32,7 +32,7 @@ public:
 
     static void L_Seek(std::vector<std::string>, unsigned int);
 
-    static unsigned int Write_File(std::vector<std::string>, const char *content);
+    static unsigned int Write_File(std::vector<std::string>, const char *, unsigned int);
 
     static unsigned int Read_File(std::vector<std::string>, char *content, int length);
 
@@ -40,5 +40,5 @@ public:
 
     static unsigned int Get_File_Size(std::vector<std::string>);
 };
-int Get_Inode_Num(std::vector<std::string> , int = -1);
+int Get_Inode_Num(std::vector<std::string>, int = -1);
 #endif
