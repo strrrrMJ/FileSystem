@@ -23,7 +23,7 @@ private:
     void Destroy_Tree(File_Tree *);
     std::string Get_Tree_Display_String(File_Tree *, unsigned int, std::vector<unsigned int> &);
 
-public:
+private:
     Directory current_dirrectory;
     std::vector<std::string> args;
     bool flag;
@@ -56,6 +56,8 @@ private:
     void Func_Tree();
     void Func_Logout();
     void Func_Chmod();
+    void Func_Register();
+    void Func_Userlist();
 
     void Func_Openlist();
 
