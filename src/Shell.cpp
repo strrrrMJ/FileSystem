@@ -8,6 +8,52 @@
 using namespace std;
 extern FileSystem g_filesystem;
 
+string Shell::Get_Tree_Display_String(File_Tree *node, unsigned int n, std::vector<unsigned int> &nodeStatusList)
+{
+    string tree_string = "";
+    if (n == 0)
+    {
+        tree_string = "File Structure:\n";
+        tree_string += "  " + node->name + "\n";
+    }
+    else
+    {
+        tree_string = "";
+        for (unsigned int i = 0; i < nodeStatusList.size(); i++)
+        {
+            if (nodeStatusList[i] == 1)
+            {
+                tree_string += "  └";
+                nodeStatusList[i] = 2;
+            }
+            else if (nodeStatusList[i] == 0)
+            {
+                tree_string += "  │";
+            }
+            else
+            {
+                tree_string += "   ";
+            }
+        }
+        tree_string += "──" + node->name + "\n";
+    }
+    if (!node->child.empty())
+    {
+        for (unsigned int i = 0; i < node->child.size(); i++)
+        {
+            unsigned status = 0;
+            if (i == node->child.size() - 1)
+            {
+                status = 1;
+            }
+            nodeStatusList.push_back(status);
+            tree_string += Get_Tree_Display_String(node->child[i], n + 1, nodeStatusList);
+            nodeStatusList.pop_back();
+        }
+    }
+    return tree_string;
+}
+
 void Shell::Recursive_Helper_Of_Func_Tree(int depth, vector<string> &path)
 {
     // Get the inode
@@ -42,14 +88,76 @@ void Shell::Recursive_Helper_Of_Func_Tree(int depth, vector<string> &path)
     }
 }
 
+File_Tree *Shell::Construct_Tree(string name, unsigned int parent_dir_inode_num)
+{
+    // get this file's(or directory's) inode
+    vector<string> path;
+    path.push_back(name);
+    unsigned int inode_num = Get_Inode_Num(path, parent_dir_inode_num);
+    Inode inode;
+    FileSystem::Load_Inode(inode, inode_num);
+
+    // new File_Tree node
+    File_Tree *file_tree_node = new File_Tree;
+    // store file's(or directory's) name
+    file_tree_node->name = name;
+
+    // it's a file
+    if (inode.i_mode == 0)
+    {
+        return file_tree_node;
+    }
+    // it's a directory
+    else
+    {
+        Directory dir;
+        DiskDriver::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+        for (unsigned int i = 2; i < inode.i_size; i++)
+        {
+            string sub_name = dir.d_filename[i];
+            file_tree_node->child.push_back(Construct_Tree(sub_name, inode_num));
+        }
+        return file_tree_node;
+    }
+}
+
+void Shell::Destroy_Tree(File_Tree *root)
+{
+    for (unsigned int i = 0; i < root->child.size(); i++)
+    {
+        Destroy_Tree(root->child[i]);
+    }
+    delete root;
+}
+
 void Shell::Func_Tree()
 {
-    cout << "." << endl;
+    // construct file tree structure
+    File_Tree *file_tree = new File_Tree;
+    Inode inode;
+    vector<string> path;
+    Parse_Path(current_path, path);
+    string name = path[path.size() - 1];
+    int dir_inode_num = Get_Inode_Num(path);
+    FileSystem::Load_Inode(inode, dir_inode_num);
+    Directory dir;
+    DiskDriver::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+
+    file_tree->name = name;
+    for (unsigned int i = 2; i < inode.i_size; i++)
+    {
+        string sub_name = dir.d_filename[i];
+        file_tree->child.push_back(Construct_Tree(sub_name, dir_inode_num));
+    }
+    // cout << "." << endl;
     if (args.size() == 1)
     {
-        vector<string> cur_path_vec;
-        Parse_Path(current_path, cur_path_vec);
-        Recursive_Helper_Of_Func_Tree(0, cur_path_vec);
+        // vector<string> cur_path_vec;
+        // Parse_Path(current_path, cur_path_vec);
+        // Recursive_Helper_Of_Func_Tree(0, cur_path_vec);
+        vector<unsigned int> nodeStatusList;
+        string output_string = Get_Tree_Display_String(file_tree, 0, nodeStatusList);
+        cout << output_string;
     }
     else if (args[1] == "-L")
     {
@@ -58,6 +166,8 @@ void Shell::Func_Tree()
     {
         cout << "Illegal Arguments! Please Read The Help Info!" << endl;
     }
+
+    Destroy_Tree(file_tree);
 }
 
 void Shell::Func_Ls()

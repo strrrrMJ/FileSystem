@@ -9,12 +9,19 @@
 #include <vector>
 #include <string>
 #include <map>
+struct File_Tree
+{
+    std::string name;
+    std::vector<File_Tree *> child;
+};
 
-void Func_Exit();
 class Shell
 {
 private:
     void Recursive_Helper_Of_Func_Tree(int, std::vector<std::string> &);
+    File_Tree *Construct_Tree(std::string, unsigned int);
+    void Destroy_Tree(File_Tree *);
+    std::string Get_Tree_Display_String(File_Tree *, unsigned int, std::vector<unsigned int> &);
 
 public:
     Directory current_dirrectory;
