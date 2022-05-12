@@ -452,26 +452,9 @@ void Shell::Func_Logout()
 
 void Shell::Func_Chmod()
 {
-    if (args[1].length() != 3)
-    {
-        cout << "Illegal Arguments" << endl;
-        return;
-    }
-    unsigned short o = args[1][0] - '0';
-    unsigned short g = args[1][1] - '0';
-    unsigned short e = args[1][2] - '0';
-
-    if (o<0 | g<0 | e<0 | o> 7 | g> 7 | e> 7)
-    {
-        cout << "Illegal Arguments" << endl;
-        return;
-    }
-
-    unsigned short new_permission = o * 64 + g * 8 + e;
-
     // Get the path vector
     string complete_path;
-    if (args[2][0] != '/')
+    if (args[1][0] != '/')
     {
         complete_path = current_path + "/" + args[1];
     }
@@ -486,6 +469,49 @@ void Shell::Func_Chmod()
     unsigned int inode_num = Get_Inode_Num(path_vector);
     Inode inode;
     FileSystem::Load_Inode(inode, inode_num);
+
+    // print the permission
+    if (args.size() == 2)
+    {
+        // cout << "This File's Permission: ";
+        cout<<"Permission: ";
+
+        cout << (inode.i_permission & Inode::Owner_R ? 'r' : '-');
+        cout << (inode.i_permission & Inode::Owner_W ? 'w' : '-');
+        cout << (inode.i_permission & Inode::Owner_E ? 'x' : '-');
+
+        cout<<' ';
+
+        cout << (inode.i_permission & Inode::GROUP_R ? 'r' : '-');
+        cout << (inode.i_permission & Inode::GROUP_W ? 'w' : '-');
+        cout << (inode.i_permission & Inode::GROUP_E ? 'x' : '-');
+
+        cout<<' ';
+
+        cout << (inode.i_permission & Inode::ELSE_R ? 'r' : '-');
+        cout << (inode.i_permission & Inode::ELSE_W ? 'w' : '-');
+        cout << (inode.i_permission & Inode::ELSE_E ? 'x' : '-');
+
+        cout << endl;
+        return;
+    }
+    if (args[2].length() != 3)
+    {
+        cout << "Illegal Arguments" << endl;
+        return;
+    }
+
+    unsigned short o = args[1][0] - '0';
+    unsigned short g = args[1][1] - '0';
+    unsigned short e = args[1][2] - '0';
+
+    if (o<0 | g<0 | e<0 | o> 7 | g> 7 | e> 7)
+    {
+        cout << "Illegal Arguments" << endl;
+        return;
+    }
+
+    unsigned short new_permission = o * 64 + g * 8 + e;
 
     inode.i_permission = new_permission;
 
@@ -595,7 +621,8 @@ void Shell::Log_In()
         else
         {
             g_user = user;
-            cout << "Log In Successfully" << endl;
+            cout<<endl;
+            cout << "Log In Successfully!" << endl;
             break;
         }
     }

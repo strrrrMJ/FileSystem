@@ -31,7 +31,7 @@ public:
     std::map<std::string, void (Shell::*)(void)> command_exec;
     std::string current_path;
 
-public:
+private:
     void Prompt();
     void Get_Command();
     void Execute();
@@ -55,9 +55,11 @@ public:
     void Func_Help();
     void Func_Tree();
     void Func_Logout();
+    void Func_Chmod();
 
     void Func_Openlist();
 
+public:
     void Parse_Path(std::string, std::vector<std::string> &);
     static void Transform_Path(std::vector<std::string> &, std::vector<std::string> &);
 
