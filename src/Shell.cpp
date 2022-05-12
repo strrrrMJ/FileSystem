@@ -381,7 +381,7 @@ void Shell::Func_Write()
 
             FileManager::Write_File(path, content, read_length);
 
-            delete content;
+            delete[] content;
 
             fp.close();
         }
@@ -423,7 +423,7 @@ void Shell::Func_Read()
         fp.write(content, bytes_remained);
 
         // release
-        delete content;
+        delete[] content;
 
         fp.close();
     }
@@ -435,6 +435,7 @@ void Shell::Func_Read()
         cout << content << endl;
     }
 }
+
 void Shell::Func_Seekg()
 {
     vector<string> path_t;
@@ -447,6 +448,48 @@ void Shell::Func_Seekg()
 void Shell::Func_Logout()
 {
     g_user.uid = (unsigned short)(-1);
+}
+
+void Shell::Func_Chmod()
+{
+    if (args[1].length() != 3)
+    {
+        cout << "Illegal Arguments" << endl;
+        return;
+    }
+    unsigned short o = args[1][0] - '0';
+    unsigned short g = args[1][1] - '0';
+    unsigned short e = args[1][2] - '0';
+
+    if (o<0 | g<0 | e<0 | o> 7 | g> 7 | e> 7)
+    {
+        cout << "Illegal Arguments" << endl;
+        return;
+    }
+
+    unsigned short new_permission = o * 64 + g * 8 + e;
+
+    // Get the path vector
+    string complete_path;
+    if (args[2][0] != '/')
+    {
+        complete_path = current_path + "/" + args[1];
+    }
+    else
+    {
+        complete_path = args[1];
+    }
+    vector<string> path_vector;
+    Parse_Path(complete_path, path_vector);
+
+    // Get the inode
+    unsigned int inode_num = Get_Inode_Num(path_vector);
+    Inode inode;
+    FileSystem::Load_Inode(inode, inode_num);
+
+    inode.i_permission = new_permission;
+
+    FileSystem::Store_Inode(inode, inode_num);
 }
 
 void Shell::Init_Command_Exec()
@@ -467,6 +510,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("seekg")] = &Shell::Func_Seekg;
     this->command_exec[string("tree")] = &Shell::Func_Tree;
     this->command_exec[string("logout")] = &Shell::Func_Logout;
+    this->command_exec[string("chmod")] = &Shell::Func_Chmod;
 }
 
 void Shell::Prompt()
@@ -551,7 +595,7 @@ void Shell::Log_In()
         else
         {
             g_user = user;
-            cout << "Log In Successfully";
+            cout << "Log In Successfully" << endl;
             break;
         }
     }
