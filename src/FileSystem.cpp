@@ -110,8 +110,8 @@ void FileSystem::Init_Register()
     // open it
     FileManager::Open_File(register_file_path);
 
-    // initialize number of user to 1
-    unsigned int usr_cnt = 1;
+    // initialize number of user to 3
+    unsigned int usr_cnt = 3;
     FileManager::Write_File(register_file_path, (char *)&usr_cnt, sizeof(unsigned int));
 
     // add root into this file
@@ -122,8 +122,38 @@ void FileSystem::Init_Register()
     strcpy(root.password, "root");
     FileManager::Write_File(register_file_path, (char *)&root, sizeof(User));
 
+    // add Bob into this file
+    User Bob;
+    Bob.gid = 1;
+    Bob.uid = 1;
+    strcpy(Bob.username, "Bob");
+    strcpy(Bob.password, "123456");
+    FileManager::Write_File(register_file_path, (char *)&Bob, sizeof(User));
+
+    // add Tom into this file
+    User Tom;
+    Tom.gid = 1;
+    Tom.uid = 2;
+    strcpy(Tom.username, "Tom");
+    strcpy(Tom.password, "123456");
+    FileManager::Write_File(register_file_path, (char *)&Tom, sizeof(User));
+
     // close it
     FileManager::Close_File(register_file_path);
+
+    // create Bob's own user directory
+    vector<string> Bob_directory_path;
+    Bob_directory_path.push_back(string("root"));
+    Bob_directory_path.push_back(string("Users"));
+    Bob_directory_path.push_back(string("Bob"));
+    FileManager::Create_Dir(Bob_directory_path);
+
+    // create Tom's own user directory
+    vector<string> Tom_directory_path;
+    Tom_directory_path.push_back(string("root"));
+    Tom_directory_path.push_back(string("Users"));
+    Tom_directory_path.push_back(string("Tom"));
+    FileManager::Create_Dir(Tom_directory_path);
 }
 
 User FileSystem::Check_User(std::string username, std::string password)
@@ -141,7 +171,7 @@ User FileSystem::Check_User(std::string username, std::string password)
 
     User res;
     res.uid = -1;
-    cout << usr_num << endl;
+
     // read out every record and compare with given username and password
     for (unsigned int i = 0; i < usr_num; i++)
     {
@@ -150,7 +180,7 @@ User FileSystem::Check_User(std::string username, std::string password)
         FileManager::Read_File(register_file_path, (char *)&read_usr_tmp, sizeof(User));
 
         // if both match
-        if (string(read_usr_tmp.username) == username && string(read_usr_tmp.password) == password)
+        if ((string(read_usr_tmp.username) == username) && (string(read_usr_tmp.password) == password))
         {
             res = read_usr_tmp;
             break;

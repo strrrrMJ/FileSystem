@@ -54,6 +54,7 @@ public:
     void Func_help();
     void Func_Help();
     void Func_Tree();
+    void Func_Logout();
 
     void Func_Openlist();
 

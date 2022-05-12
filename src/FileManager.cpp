@@ -409,7 +409,7 @@ File *FileManager::Open_File(vector<string> path)
     f->f_offset = 0;
     f->f_offset = 0;
     f_open_map[path_string] = f;
-    cout << path_string << endl;
+    // cout << path_string << endl;
     return f;
 }
 
@@ -442,7 +442,7 @@ void FileManager::Close_File(vector<string> path)
 
         f_open_map.erase(path_string);
 
-        cout << "Close File Successfully!" << endl;
+        // cout << "Close File Successfully!" << endl;
     }
 }
 

@@ -443,6 +443,12 @@ void Shell::Func_Seekg()
     Transform_Path(path_t, path);
     FileManager::L_Seek(path, atoi(args[2].c_str()));
 }
+
+void Shell::Func_Logout()
+{
+    g_user.uid = (unsigned short)(-1);
+}
+
 void Shell::Init_Command_Exec()
 {
     this->command_exec[string("ls")] = &Shell::Func_Ls;
@@ -460,6 +466,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("close")] = &Shell::Func_Close;
     this->command_exec[string("seekg")] = &Shell::Func_Seekg;
     this->command_exec[string("tree")] = &Shell::Func_Tree;
+    this->command_exec[string("logout")] = &Shell::Func_Logout;
 }
 
 void Shell::Prompt()
@@ -531,27 +538,12 @@ void Shell::Log_In()
         getline(cin, usr);
         cout << "Input Password: ";
         getline(cin, psw);
+
+        // check if id matches password
         User user = FileSystem::Check_User(usr, psw);
 
-        // if (usr == "root")
-        // {
-        //     if (psw == "root")
-        //     {
-        //         this->usr_name = usr;
-        //         break;
-        //     }
-        // }
-        // else if (usr == "Bob")
-        // {
-        //     if (psw == "123456")
-        //     {
-        //         this->usr_name = usr;
-        //         break;
-        //     }
-        // }
-
         // wrong username or password
-        if (user.uid == -1)
+        if (user.uid == (unsigned short)(-1))
         {
             cout << "Please Check Your ID and Password, and Try Again!" << endl;
         }
@@ -571,6 +563,7 @@ void Shell::Run()
     {
         DiskDriver::Create_Disk();
     }
+    g_user.uid = (unsigned short)(-1);
 
     cout << endl;
     cout << "Welcome To Virtual Unix File System!" << endl;
@@ -584,13 +577,27 @@ void Shell::Run()
     {
         FileSystem::Format_Disk();
     }
+
     FileSystem::Boot();
 
-    this->Log_In();
-    this->flag = true;
     this->Init_Command_Exec();
+
+    this->flag = true;
+
     while (1)
     {
+        if (g_user.uid == (unsigned short)(-1))
+        {
+            this->Log_In();
+            if (g_user.uid == 0)
+            {
+                current_path = "/";
+            }
+            else
+            {
+                current_path = "/Users/" + string(g_user.username);
+            }
+        }
         this->Prompt();
         this->Get_Command();
         this->Execute();
