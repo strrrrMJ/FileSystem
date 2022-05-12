@@ -403,6 +403,23 @@ File *FileManager::Open_File(vector<string> path)
         return NULL;
     }
 
+    // Verify the permission
+    if (inode.i_gid != g_user.gid && (inode.i_permission & Inode::ELSE_R) == false && g_user.uid != 0)
+    {
+        // cout << "Current User Doesn't Have Permission To Open!" << endl;
+        return NULL;
+    }
+    if (inode.i_uid != g_user.uid && (inode.i_permission & Inode::GROUP_R) == false && g_user.uid != 0)
+    {
+        // cout << "Current User Doesn't Have Permission To Open!" << endl;
+        return NULL;
+    }
+    if ((inode.i_permission & Inode::Owner_R) == false && g_user.uid != 0)
+    {
+        // cout << "Current User Doesn't Have Permission To Open!" << endl;
+        return NULL;
+    }
+
     // merge path component into a string, as is convenient to judge whether this file was already opened
     string path_string = "";
     for (unsigned int i = 1; i < path0.size(); i++)

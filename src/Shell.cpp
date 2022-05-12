@@ -324,11 +324,12 @@ void Shell::Func_Open()
     File *f = FileManager::Open_File(path);
     if (!f)
     {
-        cout << "failed to open it, for you could opened it already or it does not exist!" << endl;
+        cout << "Failed To Open It, For You Could Opened It Already Or It Does Not Exist";
+        cout << " Or You Don't Have The Permission!" << endl;
     }
     else
     {
-        cout << "file successfully opened!" << endl;
+        cout << "File Successfully Opened!" << endl;
     }
 }
 
@@ -431,8 +432,9 @@ void Shell::Func_Read()
     {
         const int MAX_CONTENT_LEN = 500;
         char content[MAX_CONTENT_LEN];
-        FileManager::Read_File(path, content, atoi(args[3].c_str()));
-        cout << content << endl;
+        unsigned int tmp = FileManager::Read_File(path, content, atoi(args[3].c_str()));
+        if (tmp > 0)
+            cout << content << endl;
     }
 }
 
@@ -474,19 +476,19 @@ void Shell::Func_Chmod()
     if (args.size() == 2)
     {
         // cout << "This File's Permission: ";
-        cout<<"Permission: ";
+        cout << "Permission: ";
 
         cout << (inode.i_permission & Inode::Owner_R ? 'r' : '-');
         cout << (inode.i_permission & Inode::Owner_W ? 'w' : '-');
         cout << (inode.i_permission & Inode::Owner_E ? 'x' : '-');
 
-        cout<<' ';
+        cout << ' ';
 
         cout << (inode.i_permission & Inode::GROUP_R ? 'r' : '-');
         cout << (inode.i_permission & Inode::GROUP_W ? 'w' : '-');
         cout << (inode.i_permission & Inode::GROUP_E ? 'x' : '-');
 
-        cout<<' ';
+        cout << ' ';
 
         cout << (inode.i_permission & Inode::ELSE_R ? 'r' : '-');
         cout << (inode.i_permission & Inode::ELSE_W ? 'w' : '-');
@@ -501,9 +503,9 @@ void Shell::Func_Chmod()
         return;
     }
 
-    unsigned short o = args[1][0] - '0';
-    unsigned short g = args[1][1] - '0';
-    unsigned short e = args[1][2] - '0';
+    unsigned short o = args[2][0] - '0';
+    unsigned short g = args[2][1] - '0';
+    unsigned short e = args[2][2] - '0';
 
     if (o<0 | g<0 | e<0 | o> 7 | g> 7 | e> 7)
     {
@@ -631,12 +633,9 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("seekg")] = &Shell::Func_Seekg;
     this->command_exec[string("tree")] = &Shell::Func_Tree;
     this->command_exec[string("logout")] = &Shell::Func_Logout;
-<<<<<<< HEAD
     this->command_exec[string("chmod")] = &Shell::Func_Chmod;
-=======
     this->command_exec[string("register")] = &Shell::Func_Register;
     this->command_exec[string("userlist")] = &Shell::Func_Userlist;
->>>>>>> 296b84d7ca5e84fb4092cafde404af9c9a1a1953
 }
 
 void Shell::Prompt()
@@ -721,7 +720,7 @@ void Shell::Log_In()
         else
         {
             g_user = user;
-            cout<<endl;
+            cout << endl;
             cout << "Log In Successfully!" << endl;
             break;
         }
@@ -744,6 +743,10 @@ void Shell::Run()
     cout << "Erase All Data And Format The Disk?(y/n): ";
     string format;
     getline(cin, format);
+
+    g_user.uid = 0;
+    g_user.gid = 0;
+
     if (format == "y")
     {
         FileSystem::Format_Disk();
@@ -755,6 +758,8 @@ void Shell::Run()
 
     this->flag = true;
 
+    g_user.uid = (unsigned short)(-1);
+    g_user.gid = (unsigned short)(-1);
     while (1)
     {
         if (g_user.uid == (unsigned short)(-1))
