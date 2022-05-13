@@ -10,6 +10,7 @@
 #include <fstream>
 
 using namespace std;
+
 extern FileSystem g_filesystem;
 extern User g_user;
 
@@ -175,99 +176,126 @@ void Shell::Func_Tree()
 
 void Shell::Func_Ls()
 {
-    const unsigned int time_len = 25;
-    const unsigned int type_len = 15;
-    const unsigned int size_len = 15;
-    const unsigned int name_len = 25;
-    const unsigned int owner_len = 25;
-    const unsigned int permission_len = 25;
-    cout << setw(time_len) << "Edit Time";
-    cout << setw(type_len) << "Type";
-    cout << setw(size_len) << "Size(Byte)";
-    cout << setw(name_len) << "Name";
-    cout << setw(owner_len) << "Owner";
-    cout << setw(permission_len) << "Permission";
-    cout << endl;
-    Inode inode;
-    vector<string> path;
-    Parse_Path(current_path, path);
-    int dir_inode_num = Get_Inode_Num(path);
-    FileSystem::Load_Inode(inode, dir_inode_num);
-    Directory dir;
-    BufferManager::Read(inode.i_addr[0], 0, (char *)&dir, sizeof(Directory));
-    for (unsigned int i = 0; i < inode.i_size; i++)
+    if (args.size() == 1)
     {
-
-        Inode sub_dir_inode;
-        unsigned int sub_dir_inode_num = dir.d_inode_num[i];
-        FileSystem::Load_Inode(sub_dir_inode, sub_dir_inode_num);
-        time_t time = sub_dir_inode.i_time;
-        unsigned short mode = sub_dir_inode.i_mode;
-        unsigned int size = sub_dir_inode.i_size;
-        char *time_str = asctime(gmtime(&time));
-        time_str[strlen(time_str) - 1] = 0;
-        cout << setw(time_len) << time_str;
-        cout << setw(type_len);
-        if (mode == 1)
+        Inode inode;
+        vector<string> path;
+        Parse_Path(current_path, path);
+        int dir_inode_num = Get_Inode_Num(path);
+        FileSystem::Load_Inode(inode, dir_inode_num);
+        Directory dir;
+        BufferManager::Read(inode.i_addr[0], 0, (char *)&dir, sizeof(Directory));
+        for (unsigned int i = 0; i < inode.i_size; i++)
         {
-            cout << "<DIR>" << setw(size_len) << "-";
-            cout << setw(name_len) << dir.d_filename[i];
-            cout << setw(owner_len) << "-";
-            cout << setw(permission_len - 8);
-            cout << (sub_dir_inode.i_permission & Inode::Owner_R ? 'R' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::Owner_W ? 'W' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::Owner_E ? 'X' : '-');
-
-            cout << (sub_dir_inode.i_permission & Inode::GROUP_R ? 'R' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::GROUP_W ? 'W' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::GROUP_E ? 'X' : '-');
-
-            cout << (sub_dir_inode.i_permission & Inode::ELSE_R ? 'R' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::ELSE_W ? 'W' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::ELSE_E ? 'X' : '-');
-        }
-        else
-        {
-            cout << "<FILE>" << setw(size_len) << size;
-            cout << setw(name_len) << dir.d_filename[i];
-            // cout << endl
-
-            User user;
-            vector<string> register_file_path;
-            register_file_path.push_back("root");
-            register_file_path.push_back("etc");
-            register_file_path.push_back("passwd");
-            FileManager::Open_File(register_file_path);
-            unsigned int usr_num;
-            FileManager::Read_File(register_file_path, (char *)&usr_num, sizeof(unsigned int));
-            for (unsigned int i = 0; i < usr_num; i++)
-            {
-                // read out
-                User read_usr_tmp;
-                FileManager::Read_File(register_file_path, (char *)&read_usr_tmp, sizeof(User));
-
-                // if both match
-                if (read_usr_tmp.uid == sub_dir_inode.i_uid)
-                {
-                    cout << setw(owner_len) << read_usr_tmp.username;
-                    break;
-                }
-            }
-            FileManager::Close_File(register_file_path);
-            cout << setw(permission_len - 8);
-            cout << (sub_dir_inode.i_permission & Inode::Owner_R ? 'R' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::Owner_W ? 'W' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::Owner_E ? 'X' : '-');
-
-            cout << (sub_dir_inode.i_permission & Inode::GROUP_R ? 'R' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::GROUP_W ? 'W' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::GROUP_E ? 'X' : '-');
-
-            cout << (sub_dir_inode.i_permission & Inode::ELSE_R ? 'R' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::ELSE_W ? 'W' : '-');
-            cout << (sub_dir_inode.i_permission & Inode::ELSE_E ? 'X' : '-');
+            Inode sub_dir_inode;
+            unsigned int sub_dir_inode_num = dir.d_inode_num[i];
+            FileSystem::Load_Inode(sub_dir_inode, sub_dir_inode_num);
+            unsigned short mode = sub_dir_inode.i_mode;
+            cout << dir.d_filename[i];
+            cout << "  ";
         }
         cout << endl;
+    }
+    else if (args.size() > 2 || args[1] != "-l")
+    {
+        cout << "Incorrect Arguments For This Command" << endl;
+    }
+    else
+    {
+        const unsigned int time_len = 25;
+        const unsigned int type_len = 15;
+        const unsigned int size_len = 15;
+        const unsigned int name_len = 25;
+        const unsigned int owner_len = 25;
+        const unsigned int permission_len = 25;
+        cout << setw(time_len) << "Edit Time";
+        cout << setw(type_len) << "Type";
+        cout << setw(size_len) << "Size(Byte)";
+        cout << setw(name_len) << "Name";
+        cout << setw(owner_len) << "Owner";
+        cout << setw(permission_len) << "Permission";
+        cout << endl;
+        Inode inode;
+        vector<string> path;
+        Parse_Path(current_path, path);
+        int dir_inode_num = Get_Inode_Num(path);
+        FileSystem::Load_Inode(inode, dir_inode_num);
+        Directory dir;
+        BufferManager::Read(inode.i_addr[0], 0, (char *)&dir, sizeof(Directory));
+        for (unsigned int i = 0; i < inode.i_size; i++)
+        {
+
+            Inode sub_dir_inode;
+            unsigned int sub_dir_inode_num = dir.d_inode_num[i];
+            FileSystem::Load_Inode(sub_dir_inode, sub_dir_inode_num);
+            time_t time = sub_dir_inode.i_time;
+            unsigned short mode = sub_dir_inode.i_mode;
+            unsigned int size = sub_dir_inode.i_size;
+            char *time_str = asctime(gmtime(&time));
+            time_str[strlen(time_str) - 1] = 0;
+            cout << setw(time_len) << time_str;
+            cout << setw(type_len);
+            if (mode == 1)
+            {
+                cout << "<DIR>" << setw(size_len) << "-";
+                cout << setw(name_len) << dir.d_filename[i];
+                cout << setw(owner_len) << "-";
+                cout << setw(permission_len - 8);
+                cout << (sub_dir_inode.i_permission & Inode::Owner_R ? 'R' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::Owner_W ? 'W' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::Owner_E ? 'X' : '-');
+
+                cout << (sub_dir_inode.i_permission & Inode::GROUP_R ? 'R' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::GROUP_W ? 'W' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::GROUP_E ? 'X' : '-');
+
+                cout << (sub_dir_inode.i_permission & Inode::ELSE_R ? 'R' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::ELSE_W ? 'W' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::ELSE_E ? 'X' : '-');
+            }
+            else
+            {
+                cout << "<FILE>" << setw(size_len) << size;
+                cout << setw(name_len) << dir.d_filename[i];
+                // cout << endl
+
+                User user;
+                vector<string> register_file_path;
+                register_file_path.push_back("root");
+                register_file_path.push_back("etc");
+                register_file_path.push_back("passwd");
+                FileManager::Open_File(register_file_path);
+                unsigned int usr_num;
+                FileManager::Read_File(register_file_path, (char *)&usr_num, sizeof(unsigned int));
+                for (unsigned int i = 0; i < usr_num; i++)
+                {
+                    // read out
+                    User read_usr_tmp;
+                    FileManager::Read_File(register_file_path, (char *)&read_usr_tmp, sizeof(User));
+
+                    // if both match
+                    if (read_usr_tmp.uid == sub_dir_inode.i_uid)
+                    {
+                        cout << setw(owner_len) << read_usr_tmp.username;
+                        break;
+                    }
+                }
+                FileManager::Close_File(register_file_path);
+                cout << setw(permission_len - 8);
+                cout << (sub_dir_inode.i_permission & Inode::Owner_R ? 'R' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::Owner_W ? 'W' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::Owner_E ? 'X' : '-');
+
+                cout << (sub_dir_inode.i_permission & Inode::GROUP_R ? 'R' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::GROUP_W ? 'W' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::GROUP_E ? 'X' : '-');
+
+                cout << (sub_dir_inode.i_permission & Inode::ELSE_R ? 'R' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::ELSE_W ? 'W' : '-');
+                cout << (sub_dir_inode.i_permission & Inode::ELSE_E ? 'X' : '-');
+            }
+            cout << endl;
+        }
     }
 }
 
@@ -286,7 +314,7 @@ void Shell::Func_Mkdir()
     FileManager::Create_Dir(path);
 }
 
-void Shell::Func_Create()
+void Shell::Func_Touch()
 {
     vector<string> path_t;
     Parse_Path(args[1], path_t);
@@ -570,27 +598,35 @@ void Shell::Func_Chmod()
         cout << endl;
         return;
     }
-    if (args[2].length() != 3)
+    else if (args[2].length() != 3)
     {
-        cout << "Illegal Arguments" << endl;
+        cout << "Illegal Arguments!" << endl;
         return;
     }
-
-    unsigned short o = args[2][0] - '0';
-    unsigned short g = args[2][1] - '0';
-    unsigned short e = args[2][2] - '0';
-
-    if (o<0 | g<0 | e<0 | o> 7 | g> 7 | e> 7)
+    else if (g_user.uid != inode.i_uid && g_user.uid != 0)
     {
-        cout << "Illegal Arguments" << endl;
+        cout << "Only The File's Owner Can Modify Its Permissions!" << endl;
         return;
     }
+    else
+    {
 
-    unsigned short new_permission = o * 64 + g * 8 + e;
+        unsigned short o = args[2][0] - '0';
+        unsigned short g = args[2][1] - '0';
+        unsigned short e = args[2][2] - '0';
 
-    inode.i_permission = new_permission;
+        if (o<0 | g<0 | e<0 | o> 7 | g> 7 | e> 7)
+        {
+            cout << "Illegal Arguments" << endl;
+            return;
+        }
 
-    FileSystem::Store_Inode(inode, inode_num);
+        unsigned short new_permission = o * 64 + g * 8 + e;
+
+        inode.i_permission = new_permission;
+
+        FileSystem::Store_Inode(inode, inode_num);
+    }
 }
 
 void Shell::Func_Register()
@@ -694,7 +730,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("exit")] = &Shell::Func_Exit;
     this->command_exec[string("mkdir")] = &Shell::Func_Mkdir;
     this->command_exec[string("cd")] = &Shell::Func_Cd;
-    this->command_exec[string("create")] = &Shell::Func_Create;
+    this->command_exec[string("touch")] = &Shell::Func_Touch;
     this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
     this->command_exec[string("rm")] = &Shell::Func_Rm;
     this->command_exec[string("write")] = &Shell::Func_Write;

@@ -106,41 +106,41 @@ Buf *BufferManager::Fetch_Buffer(unsigned int blk_no)
     return res;
 }
 
-// void BufferManager::Read(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
-// {
-//     DiskDriver::Read(blk_no * BLOCK_SIZE + offset, mem_addr, size);
-// }
-
-// void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
-// {
-//     DiskDriver::Write(blk_no * BLOCK_SIZE + offset, mem_addr, size);
-// }
-
 void BufferManager::Read(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
 {
-    Buf *buf = Fetch_Buffer(blk_no);
-    if (!buf)
-    {
-        buf = Allocate_Buffer();
-        buf->b_blkno = blk_no;
-
-        DiskDriver::Read(buf->b_blkno, (char *)buf->b_data, sizeof(BLOCK_SIZE));
-    }
-
-    memcpy(mem_addr, buf->b_data + offset, size);
+    DiskDriver::Read(blk_no * BLOCK_SIZE + offset, mem_addr, size);
 }
 
 void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
 {
-
-    Buf *buf = Fetch_Buffer(blk_no);
-    if (!buf)
-    {
-        buf = Allocate_Buffer();
-        buf->b_blkno = blk_no;
-
-        DiskDriver::Read(buf->b_blkno, (char *)buf->b_data, sizeof(BLOCK_SIZE));
-    }
-
-    memcpy(buf->b_data + offset, mem_addr, size);
+    DiskDriver::Write(blk_no * BLOCK_SIZE + offset, mem_addr, size);
 }
+
+// void BufferManager::Read(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
+// {
+//     Buf *buf = Fetch_Buffer(blk_no);
+//     if (!buf)
+//     {
+//         buf = Allocate_Buffer();
+//         buf->b_blkno = blk_no;
+
+//         DiskDriver::Read(buf->b_blkno, (char *)buf->b_data, sizeof(BLOCK_SIZE));
+//     }
+
+//     memcpy(mem_addr, buf->b_data + offset, size);
+// }
+
+// void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
+// {
+
+//     Buf *buf = Fetch_Buffer(blk_no);
+//     if (!buf)
+//     {
+//         buf = Allocate_Buffer();
+//         buf->b_blkno = blk_no;
+
+//         DiskDriver::Read(buf->b_blkno, (char *)buf->b_data, sizeof(BLOCK_SIZE));
+//     }
+
+//     memcpy(buf->b_data + offset, mem_addr, size);
+// }

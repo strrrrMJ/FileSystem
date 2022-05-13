@@ -48,5 +48,7 @@ public:
 
     static void Empty_Open_File_Table();
 };
+
 int Get_Inode_Num(std::vector<std::string>, int = -1);
+
 #endif

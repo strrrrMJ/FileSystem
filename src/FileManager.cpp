@@ -14,7 +14,7 @@ std::map<std::string, File *> FileManager::f_open_map;
 extern SuperBlock g_superblock;
 extern User g_user;
 
-// >= 0: vliad
+// >= 0: valid
 // == -1: invalid, this file or directory does not exist
 int Get_Inode_Num(vector<string> path, int begin_inode_num)
 {

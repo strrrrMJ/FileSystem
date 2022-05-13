@@ -31,7 +31,7 @@ void DiskDriver::Create_Disk()
     fp.open(DISK_NAME, std::ios::out | std::ios::binary);
     if (!fp)
     {
-        throw "ERROR WHEN CREATE DISK IMAGE";
+        throw "ERROR WHEN CREATE DISK IMAGE!";
     }
     fp.close();
 }
@@ -40,7 +40,7 @@ void DiskDriver::Destroy_Disk()
 {
     if (remove(DISK_NAME.c_str()) != 0)
     {
-        throw "ERROR DESTROYING THE DISK";
+        throw "ERROR DESTROYING THE DISK!";
     }
 }
 

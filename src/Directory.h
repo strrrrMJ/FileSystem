@@ -8,7 +8,6 @@ class Directory
 {
 public:
     unsigned int d_inode_num[MAX_SUB_DIR_NUM];
-
     char d_filename[MAX_SUB_DIR_NUM][MAX_FILE_NAME];
 };
 

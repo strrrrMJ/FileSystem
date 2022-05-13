@@ -6,7 +6,7 @@ using namespace std;
 unsigned int Inode::Offset_To_Index(unsigned int offset)
 {
     // offset to a1 a2 a3 a4
-    //  calculate physical number of this block
+    // calculate physical number of this block
     unsigned int block_cnt = offset / BLOCK_SIZE;
     if (block_cnt < DIRECT_PTR_NUM)
     {
