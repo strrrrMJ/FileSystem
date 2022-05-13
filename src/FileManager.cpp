@@ -38,7 +38,8 @@ int Get_Inode_Num(vector<string> path, int begin_inode_num)
         FileSystem::Load_Inode(inode, begin_inode_num);
         unsigned int block_num = inode.i_addr[0];
         Directory directory;
-        BufferManager::Read(block_num * BLOCK_SIZE, (char *)&directory, sizeof(Directory));
+        BufferManager::Read(block_num, 0, (char *)&directory, sizeof(Directory));
+        // BufferManager::Read(block_num * BLOCK_SIZE, (char *)&directory, sizeof(Directory));
 
         for (unsigned int i = 0; i < inode.i_size; i++)
         {
@@ -101,10 +102,12 @@ void FileManager::Create_Dir(vector<string> path)
 
             Directory parent_directory;
             unsigned int block_num = parent_directory_inode.i_addr[0];
-            BufferManager::Read(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
+            BufferManager::Read(block_num, 0, (char *)&parent_directory, sizeof(Directory));
+            // BufferManager::Read(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
             parent_directory.d_inode_num[parent_directory_inode.i_size] = dir_inode_num;
             strcpy(parent_directory.d_filename[parent_directory_inode.i_size], dir_name.c_str());
-            BufferManager::Write(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
+            BufferManager::Write(block_num, 0, (char *)&parent_directory, sizeof(Directory));
+            // BufferManager::Write(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
 
             parent_directory_inode.i_size++;
 
@@ -117,7 +120,8 @@ void FileManager::Create_Dir(vector<string> path)
             dir.d_inode_num[1] = parent_directory_inode_num;
             strcpy(dir.d_filename[0], ".");
             strcpy(dir.d_filename[1], "..");
-            BufferManager::Write(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+            BufferManager::Write(inode.i_addr[0], 0, (char *)&dir, sizeof(Directory));
+            // BufferManager::Write(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
             FileSystem::Store_Inode(inode, dir_inode_num);
         }
     }
@@ -132,7 +136,8 @@ bool FileManager::Verify_Before_Rmdir(std::vector<std::string> path)
     FileSystem::Load_Inode(dir_inode, dir_inode_num);
 
     Directory dir;
-    BufferManager::Read(dir_inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+    BufferManager::Read(dir_inode.i_addr[0], 0, (char *)&dir, sizeof(Directory));
+    // BufferManager::Read(dir_inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
 
     for (int i = 2; i < dir_inode.i_size; i++)
     {
@@ -213,7 +218,8 @@ void FileManager::Remove_Dir(vector<string> path)
             // If We don't recursively remove these stuffs, we cannot free the space they occupy
             {
                 Directory dir;
-                BufferManager::Read(dir_inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+                BufferManager::Read(dir_inode.i_addr[0], 0, (char *)&dir, sizeof(Directory));
+                // BufferManager::Read(dir_inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
 
                 for (int i = 2; i < dir_inode.i_size; i++)
                 {
@@ -244,7 +250,8 @@ void FileManager::Remove_Dir(vector<string> path)
             {
                 // Remove the record in parent directory's data region, that the datablock pointed by i_data[0]
                 Directory parent_dir;
-                BufferManager::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+                BufferManager::Read(parent_directory_inode.i_addr[0], 0, (char *)&parent_dir, sizeof(Directory));
+                // BufferManager::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
                 {
                     int i = 0;
                     while (string(parent_dir.d_filename[i]) != dir_name)
@@ -258,7 +265,8 @@ void FileManager::Remove_Dir(vector<string> path)
                         i++;
                     }
                 }
-                BufferManager::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+                BufferManager::Write(parent_directory_inode.i_addr[0], 0, (char *)&parent_dir, sizeof(Directory));
+                // BufferManager::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
                 parent_directory_inode.i_size--;
             }
         }
@@ -315,10 +323,12 @@ void FileManager::Create_File(vector<string> path)
 
             Directory parent_directory;
             unsigned int block_num = parent_directory_inode.i_addr[0];
-            BufferManager::Read(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
+            BufferManager::Read(block_num, 0, (char *)&parent_directory, sizeof(Directory));
+            // BufferManager::Read(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
             parent_directory.d_inode_num[parent_directory_inode.i_size] = file_inode_num;
             strcpy(parent_directory.d_filename[parent_directory_inode.i_size], file_name.c_str());
-            BufferManager::Write(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
+            BufferManager::Write(block_num, 0, (char *)&parent_directory, sizeof(Directory));
+            // BufferManager::Write(block_num * BLOCK_SIZE, (char *)&parent_directory, sizeof(Directory));
 
             parent_directory_inode.i_size++;
 
@@ -417,7 +427,8 @@ void FileManager::Remove_File(vector<string> path)
 
         // modify parent directory file
         Directory parent_dir;
-        BufferManager::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+        BufferManager::Read(parent_directory_inode.i_addr[0], 0, (char *)&parent_dir, sizeof(Directory));
+        // BufferManager::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
         {
             int i = 0;
             while (string(parent_dir.d_filename[i]) != file_name)
@@ -431,7 +442,8 @@ void FileManager::Remove_File(vector<string> path)
                 i++;
             }
         }
-        BufferManager::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+        BufferManager::Write(parent_directory_inode.i_addr[0], 0, (char *)&parent_dir, sizeof(Directory));
+        // BufferManager::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
 
         parent_directory_inode.i_size--;
         FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
@@ -670,7 +682,8 @@ unsigned int FileManager::Write_File(vector<string> path, const char *content, u
                 unsigned int w_cnt_this_cycle = length < BLOCK_SIZE - offset_in_blk ? length : BLOCK_SIZE - offset_in_blk;
 
                 // Write to disk
-                BufferManager::Write(blkno * BLOCK_SIZE + offset_in_blk, ptr, w_cnt_this_cycle);
+                BufferManager::Write(blkno, offset_in_blk, ptr, w_cnt_this_cycle);
+                // BufferManager::Write(blkno * BLOCK_SIZE + offset_in_blk, ptr, w_cnt_this_cycle);
 
                 // Update some variables
                 length -= w_cnt_this_cycle;
@@ -762,7 +775,8 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
             unsigned int r_cnt_this_cycle = length < BLOCK_SIZE - offset_in_blk ? length : BLOCK_SIZE - offset_in_blk;
 
             // Read from disk
-            BufferManager::Read(blkno * BLOCK_SIZE + offset_in_blk, ptr, r_cnt_this_cycle);
+            BufferManager::Read(blkno, offset_in_blk, ptr, r_cnt_this_cycle);
+            // BufferManager::Read(blkno * BLOCK_SIZE + offset_in_blk, ptr, r_cnt_this_cycle);
 
             // Update some variables
             length -= r_cnt_this_cycle;

@@ -17,7 +17,7 @@ unsigned int Inode::Offset_To_Index(unsigned int offset)
         unsigned int first_index = (block_cnt - DIRECT_PTR_NUM) / PTR_IN_BLOCK_NUM + DIRECT_PTR_NUM;
         unsigned int second_index = (block_cnt - DIRECT_PTR_NUM) % PTR_IN_BLOCK_NUM;
         unsigned int index_table[PTR_IN_BLOCK_NUM];
-        BufferManager::Read(i_addr[first_index] * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
+        BufferManager::Read(i_addr[first_index], 0, (char *)index_table, BLOCK_SIZE);
         return index_table[second_index];
     }
     else if (block_cnt < DIRECT_PTR_NUM + SEC_PTR_NUM * PTR_IN_BLOCK_NUM + TER_PTR_NUM * PTR_IN_BLOCK_NUM * PTR_IN_BLOCK_NUM)
@@ -26,9 +26,9 @@ unsigned int Inode::Offset_To_Index(unsigned int offset)
         unsigned int second_index = (block_cnt - DIRECT_PTR_NUM - SEC_PTR_NUM * PTR_IN_BLOCK_NUM - PTR_IN_BLOCK_NUM * PTR_IN_BLOCK_NUM * (first_index - DIRECT_PTR_NUM - SEC_PTR_NUM)) / PTR_IN_BLOCK_NUM;
         unsigned int third_index = (block_cnt - DIRECT_PTR_NUM - SEC_PTR_NUM * PTR_IN_BLOCK_NUM) % PTR_IN_BLOCK_NUM;
         unsigned int index_table[PTR_IN_BLOCK_NUM];
-        BufferManager::Read(i_addr[first_index] * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
+        BufferManager::Read(i_addr[first_index], 0, (char *)index_table, BLOCK_SIZE);
         unsigned int second_block_no = index_table[second_index];
-        BufferManager::Read(second_block_no * BLOCK_SIZE, (char *)index_table, BLOCK_SIZE);
+        BufferManager::Read(second_block_no, 0, (char *)index_table, BLOCK_SIZE);
         return index_table[third_index];
     }
     else
@@ -64,13 +64,13 @@ void Inode::Link(unsigned int physical_block_num)
         }
         // read level2 index table from disk
         unsigned int level2_index_table[PTR_IN_BLOCK_NUM];
-        BufferManager::Read(i_addr[first_index] * BLOCK_SIZE, (char *)level2_index_table, BLOCK_SIZE);
+        BufferManager::Read(i_addr[first_index], 0, (char *)level2_index_table, BLOCK_SIZE);
 
         // change the index table
         level2_index_table[second_index] = physical_block_num;
 
         // store level2 index table
-        BufferManager::Write(i_addr[first_index] * BLOCK_SIZE, (char *)level2_index_table, BLOCK_SIZE);
+        BufferManager::Write(i_addr[first_index], 0, (char *)level2_index_table, BLOCK_SIZE);
     }
     else if (block_cnt < DIRECT_PTR_NUM + SEC_PTR_NUM * PTR_IN_BLOCK_NUM + TER_PTR_NUM * PTR_IN_BLOCK_NUM * PTR_IN_BLOCK_NUM)
     {
@@ -92,17 +92,17 @@ void Inode::Link(unsigned int physical_block_num)
                 i_addr[first_index] = new_level2_block_num;
             }
             unsigned level2_index_table[PTR_IN_BLOCK_NUM];
-            BufferManager::Read(i_addr[first_index] * BLOCK_SIZE, (char *)level2_index_table, BLOCK_SIZE);
+            BufferManager::Read(i_addr[first_index], 0, (char *)level2_index_table, BLOCK_SIZE);
             level2_index_table[second_index] = new_level3_block_num;
-            BufferManager::Write(i_addr[first_index] * BLOCK_SIZE, (char *)level2_index_table, BLOCK_SIZE);
+            BufferManager::Write(i_addr[first_index], 0, (char *)level2_index_table, BLOCK_SIZE);
         }
         unsigned level2_index_table[PTR_IN_BLOCK_NUM];
-        BufferManager::Read(i_addr[first_index] * BLOCK_SIZE, (char *)level2_index_table, BLOCK_SIZE);
+        BufferManager::Read(i_addr[first_index], 0, (char *)level2_index_table, BLOCK_SIZE);
 
         unsigned level3_index_table[PTR_IN_BLOCK_NUM];
-        BufferManager::Read(level2_index_table[second_index] * BLOCK_SIZE, (char *)level3_index_table, BLOCK_SIZE);
+        BufferManager::Read(level2_index_table[second_index], 0, (char *)level3_index_table, BLOCK_SIZE);
         level3_index_table[third_index] = physical_block_num;
-        BufferManager::Write(level2_index_table[second_index] * BLOCK_SIZE, (char *)level3_index_table, BLOCK_SIZE);
+        BufferManager::Write(level2_index_table[second_index], 0, (char *)level3_index_table, BLOCK_SIZE);
     }
     else
     {
@@ -143,7 +143,7 @@ void Inode::Free_All_Space()
             for (unsigned int i = 0; i < level2_index_table_num_remain; i++)
             {
                 unsigned int level2_index_table[PTR_IN_BLOCK_NUM];
-                BufferManager::Read(i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i] * BLOCK_SIZE, (char *)level2_index_table, BLOCK_SIZE);
+                BufferManager::Read(i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i], 0, (char *)level2_index_table, BLOCK_SIZE);
                 for (unsigned int j = 0; j < PTR_IN_BLOCK_NUM && j < level3_index_table_num_remain; j++)
                 {
                     cout << "Level3: Free block: " << level2_index_table[j] << endl;
