@@ -6,9 +6,12 @@ A UnixV6-like file system
 
 Designed by Mo and Wang
 
+* The compile instruction: `clang++ src/*.cpp -o MyFileSystem`
+
 * The normal use of 'tree' command requires 
 the terminal to be set to the utf8 character set
-instead of gbk or gb2312 character set.
+instead of gbk or gb2312 character set. 
+Or you could modify the code about 'tree' command
 
 * The inode of the filesystem has 6 direct pointers, 
 2 single indirect pointers, and 2 double indirect pointers
