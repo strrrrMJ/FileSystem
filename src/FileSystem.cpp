@@ -1,5 +1,6 @@
 #include "FileSystem.h"
 #include "FileManager.h"
+#include "DiskDriver.h"
 
 #include <iostream>
 #include <cstdint>
@@ -23,12 +24,12 @@ void FileSystem::Init_Some_Dir()
 
 void FileSystem::Load_SuperBlock()
 {
-    DiskDriver::Read(SUPER_BLOCK_INDEX * BLOCK_SIZE, (char *)&g_superblock, sizeof(SuperBlock));
+    Buffer::Read(SUPER_BLOCK_INDEX * BLOCK_SIZE, (char *)&g_superblock, sizeof(SuperBlock));
 }
 
 void FileSystem::Store_SuperBlock()
 {
-    DiskDriver::Write(SUPER_BLOCK_INDEX * BLOCK_SIZE, (char *)&g_superblock, sizeof(SuperBlock));
+    Buffer::Write(SUPER_BLOCK_INDEX * BLOCK_SIZE, (char *)&g_superblock, sizeof(SuperBlock));
 }
 
 void FileSystem::Init_SuperBlock()
@@ -59,7 +60,7 @@ void FileSystem::Init_All_Free_Blocks()
         }
         else
         {
-            DiskDriver::Write(p_data * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
+            Buffer::Write(p_data * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
             stack[0] = p_data--;
             p_stk = 1;
         }
@@ -69,7 +70,7 @@ void FileSystem::Init_All_Free_Blocks()
 void FileSystem::Init_BitMap()
 {
     unsigned int bitmap[INODE_NUM] = {1};
-    DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE, (char *)bitmap, BITMAP_SIZE);
+    Buffer::Write(BITMAP_START_INDEX * BLOCK_SIZE, (char *)bitmap, BITMAP_SIZE);
 }
 
 void FileSystem::Init_Root()
@@ -93,7 +94,7 @@ void FileSystem::Init_Root()
     dir.d_inode_num[1] = 0;
     strcpy(dir.d_filename[0], ".");
     strcpy(dir.d_filename[1], "..");
-    DiskDriver::Write(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+    Buffer::Write(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
 
     FileSystem::Store_Inode(inode, 0);
 }
@@ -228,7 +229,7 @@ unsigned int FileSystem::Allocate_Block()
     else
     {
         res = stack[0];
-        DiskDriver::Read(res * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
+        Buffer::Read(res * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
         p_stk = MAX_NFREE;
     }
 
@@ -247,7 +248,7 @@ void FileSystem::Free_Block(unsigned int block_num)
     }
     else
     {
-        DiskDriver::Write(block_num * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
+        Buffer::Write(block_num * BLOCK_SIZE, (char *)stack, sizeof(unsigned int) * MAX_NFREE);
         stack[0] = block_num;
         p_stk = 1;
     }
@@ -265,14 +266,14 @@ unsigned int FileSystem::Allocate_Inode()
     else
     {
         unsigned int bitmap[INODE_NUM];
-        DiskDriver::Read(BITMAP_START_INDEX * BLOCK_SIZE, (char *)bitmap, BITMAP_SIZE);
+        Buffer::Read(BITMAP_START_INDEX * BLOCK_SIZE, (char *)bitmap, BITMAP_SIZE);
         for (unsigned int i = 0; i < INODE_NUM; i++)
         {
             if (bitmap[i] == 0)
             {
                 g_superblock.s_free_inode_num--;
                 unsigned int tmp = 1;
-                DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE + i * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
+                Buffer::Write(BITMAP_START_INDEX * BLOCK_SIZE + i * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
                 Store_SuperBlock();
                 return i;
             }
@@ -285,18 +286,18 @@ void FileSystem::Free_Inode(unsigned int inode_num)
 {
     g_superblock.s_free_inode_num++;
     unsigned int tmp = 0;
-    DiskDriver::Write(BITMAP_START_INDEX * BLOCK_SIZE + inode_num * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
+    Buffer::Write(BITMAP_START_INDEX * BLOCK_SIZE + inode_num * sizeof(unsigned int), (char *)&tmp, sizeof(unsigned int));
     Store_SuperBlock();
 }
 
 void FileSystem::Load_Inode(Inode &inode, unsigned int inode_pos)
 {
-    DiskDriver::Read(INODE_START_INDEX * BLOCK_SIZE + inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+    Buffer::Read(INODE_START_INDEX * BLOCK_SIZE + inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
 }
 
 void FileSystem::Store_Inode(Inode &inode, unsigned int inode_pos)
 {
-    DiskDriver::Write(INODE_START_INDEX * BLOCK_SIZE + inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+    Buffer::Write(INODE_START_INDEX * BLOCK_SIZE + inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
 }
 
 void FileSystem::Boot()

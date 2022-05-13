@@ -2,7 +2,7 @@
 #define FILESYSTEM_H
 
 #include "SuperBlock.h"
-#include "DiskDriver.h"
+#include "Buffer.h"
 #include "Inode.h"
 #include "Directory.h"
 #include "User.h"
