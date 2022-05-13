@@ -1,14 +1,13 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef BUFFERMANAGER_H
+#define BUFFERMANAGER_H
 
-class Buffer
+class BufferManager
 {
+private:
 public:
-
     static void Read(int offset, char *mem_addr, int size);
 
     static void Write(int offset, char *mem_addr, int size);
-
 };
 
 #endif
