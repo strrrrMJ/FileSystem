@@ -776,3 +776,8 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
 
     return total_read_bytes;
 }
+
+void FileManager::Empty_Open_File_Table()
+{
+    f_open_map.erase(f_open_map.begin(), f_open_map.end());
+}

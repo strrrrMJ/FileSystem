@@ -14,7 +14,7 @@ private:
     static std::map<std::string, File *> f_open_map;
 
     static bool Verify_Before_Rmdir(std::vector<std::string>);
-    
+
     static bool Verify_Before_Rm(std::vector<std::string>);
 
 public:
@@ -45,6 +45,8 @@ public:
     // static unsigned int Read_Whole_File(std::vector<std::string> &, std::string);
 
     static unsigned int Get_File_Size(std::vector<std::string>);
+
+    static void Empty_Open_File_Table();
 };
 int Get_Inode_Num(std::vector<std::string>, int = -1);
 #endif

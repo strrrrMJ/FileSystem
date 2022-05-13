@@ -465,6 +465,7 @@ void Shell::Func_Seekg()
 
 void Shell::Func_Logout()
 {
+    FileManager::Empty_Open_File_Table();
     g_user.uid = (unsigned short)(-1);
 }
 
