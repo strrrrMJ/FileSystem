@@ -352,6 +352,7 @@ bool FileManager::Verify_Before_Rm(vector<string> path)
     }
 
     // Verify the permission
+
     if (file_inode.i_gid != g_user.gid && ((file_inode.i_permission & Inode::ELSE_W) == false) && g_user.uid != 0)
     {
         return false;
@@ -380,6 +381,7 @@ void FileManager::Remove_File(vector<string> path)
     string file_name = path[path.size() - 1];
     path.pop_back();
     int parent_directory_inode_num = Get_Inode_Num(path);
+    path.push_back(file_name);
     if (parent_directory_inode_num == -1)
     {
         cout << "This File Doesn't Exist!" << endl;
@@ -623,7 +625,6 @@ unsigned int FileManager::Write_File(vector<string> path, const char *content, u
             // Verify the permission
             if (inode.i_gid != g_user.gid && ((inode.i_permission & Inode::ELSE_W) == false) && g_user.uid != 0)
             {
-                // cout << inode.i_gid << " " << g_user.gid << endl;
                 // cout << "aaa" << endl;
                 cout << "Current User Doesn't Have Permission To Write!" << endl;
                 return 0;
