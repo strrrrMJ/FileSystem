@@ -1,4 +1,5 @@
 #include "Shell.h"
+#include "DiskDriver.h"
 
 #include <iostream>
 #include <sstream>
@@ -70,7 +71,7 @@ void Shell::Recursive_Helper_Of_Func_Tree(int depth, vector<string> &path)
     // Get the directory's content
     Directory dir;
     unsigned int blkno = inode.i_addr[0];
-    DiskDriver::Read(blkno * BLOCK_SIZE, (char *)&dir, sizeof(Directory)); // No modifying, no storing
+    Buffer::Read(blkno * BLOCK_SIZE, (char *)&dir, sizeof(Directory)); // No modifying, no storing
 
     // Traverse subdirectories or files
     for (int i = 2; i < inode.i_size; i++)
@@ -116,7 +117,7 @@ File_Tree *Shell::Construct_Tree(string name, unsigned int parent_dir_inode_num)
     else
     {
         Directory dir;
-        DiskDriver::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+        Buffer::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
         for (unsigned int i = 2; i < inode.i_size; i++)
         {
             string sub_name = dir.d_filename[i];
@@ -146,7 +147,7 @@ void Shell::Func_Tree()
     int dir_inode_num = Get_Inode_Num(path);
     FileSystem::Load_Inode(inode, dir_inode_num);
     Directory dir;
-    DiskDriver::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+    Buffer::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
 
     file_tree->name = name;
     for (unsigned int i = 2; i < inode.i_size; i++)
@@ -189,7 +190,7 @@ void Shell::Func_Ls()
     int dir_inode_num = Get_Inode_Num(path);
     FileSystem::Load_Inode(inode, dir_inode_num);
     Directory dir;
-    DiskDriver::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+    Buffer::Read(inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
     for (unsigned int i = 0; i < inode.i_size; i++)
     {
         Inode sub_dir_inode;
@@ -261,7 +262,7 @@ void Shell::Func_Rmdir()
 
     if (i == path.size())
     {
-        cout << "You Can't Delete This Directory Now!" << endl;
+        cout << "You Cannot Delete This Directory!" << endl;
     }
     else
     {
@@ -444,11 +445,28 @@ void Shell::Func_Seekg()
     Parse_Path(args[1], path_t);
     vector<string> path;
     Transform_Path(path_t, path);
-    FileManager::L_Seek(path, atoi(args[2].c_str()));
+
+    if (args.size() == 3)
+    {
+        FileManager::L_Seek(path, atoi(args[2].c_str()));
+    }
+    else
+    {
+        int tmp = FileManager::L_Seek_Pos(path);
+        if (tmp == -1)
+        {
+            cout << "This File Doesn't Exist Or You Didn't Open This File!" << endl;
+        }
+        else
+        {
+            cout << "The File's R/W Pointer: " << tmp << endl;
+        }
+    }
 }
 
 void Shell::Func_Logout()
 {
+    FileManager::Empty_Open_File_Table();
     g_user.uid = (unsigned short)(-1);
 }
 
