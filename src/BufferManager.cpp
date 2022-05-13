@@ -3,7 +3,6 @@
 
 void BufferManager::Read(int offset, char *mem_addr, int size)
 {
-
     DiskDriver::Read(offset, mem_addr, size);
 }
 

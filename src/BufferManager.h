@@ -4,6 +4,7 @@
 class BufferManager
 {
 private:
+
 public:
     static void Read(int offset, char *mem_addr, int size);
 

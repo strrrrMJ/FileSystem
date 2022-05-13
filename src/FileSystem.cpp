@@ -200,6 +200,7 @@ void FileSystem::Format_Disk()
     {
         throw "DISK DOES NOT EXIST";
     }
+    
     Init_SuperBlock();
 
     Init_All_Free_Blocks();

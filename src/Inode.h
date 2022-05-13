@@ -58,9 +58,12 @@ public:
     time_t i_time; // last modified time
 
 public:
+
     // file offset to disk index (byte as unit)
     unsigned int Offset_To_Index(unsigned int);
+
     void Link(unsigned int);
+    
     void Free_All_Space();
 
 public:

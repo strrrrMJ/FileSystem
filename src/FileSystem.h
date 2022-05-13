@@ -7,7 +7,8 @@
 #include "Directory.h"
 #include "User.h"
 #include <string>
-// The Disk Layout
+
+// These const values discribe Disk Layout
 static const unsigned int BLOCK_SIZE = 512;
 
 static const unsigned int SUPER_BLOCK_INDEX = 0;

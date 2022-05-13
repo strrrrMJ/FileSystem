@@ -6,6 +6,7 @@
 
 using namespace std;
 
+// global variables which might be used in other cpp file
 FileSystem g_filesystem;
 User g_user;
 
