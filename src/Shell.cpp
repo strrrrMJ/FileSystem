@@ -261,7 +261,7 @@ void Shell::Func_Rmdir()
 
     if (i == path.size())
     {
-        cout << "You Can't Delete This Directory Now!" << endl;
+        cout << "You Cannot Delete This Directory!" << endl;
     }
     else
     {
@@ -444,7 +444,23 @@ void Shell::Func_Seekg()
     Parse_Path(args[1], path_t);
     vector<string> path;
     Transform_Path(path_t, path);
-    FileManager::L_Seek(path, atoi(args[2].c_str()));
+
+    if (args.size() == 3)
+    {
+        FileManager::L_Seek(path, atoi(args[2].c_str()));
+    }
+    else
+    {
+        int tmp = FileManager::L_Seek_Pos(path);
+        if (tmp == -1)
+        {
+            cout << "This File Doesn't Exist Or You Didn't Open This File!" << endl;
+        }
+        else
+        {
+            cout << "The File's R/W Pointer: " << tmp << endl;
+        }
+    }
 }
 
 void Shell::Func_Logout()

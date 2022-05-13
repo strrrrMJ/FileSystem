@@ -13,6 +13,10 @@ class FileManager
 private:
     static std::map<std::string, File *> f_open_map;
 
+    static bool Verify_Before_Rmdir(std::vector<std::string>);
+    
+    static bool Verify_Before_Rm(std::vector<std::string>);
+
 public:
     static void Create_Dir(std::vector<std::string>);
 
@@ -31,6 +35,8 @@ public:
     static void Close_File(std::vector<std::string>);
 
     static void L_Seek(std::vector<std::string>, unsigned int);
+
+    static unsigned int L_Seek_Pos(std::vector<std::string>);
 
     static unsigned int Write_File(std::vector<std::string>, const char *, unsigned int);
 

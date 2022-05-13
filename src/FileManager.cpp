@@ -123,6 +123,43 @@ void FileManager::Create_Dir(vector<string> path)
     }
 }
 
+// Recursively Verify Whether We Can Remove_Dir
+bool FileManager::Verify_Before_Rmdir(std::vector<std::string> path)
+{
+
+    int dir_inode_num = Get_Inode_Num(path);
+    Inode dir_inode;
+    FileSystem::Load_Inode(dir_inode, dir_inode_num);
+
+    Directory dir;
+    DiskDriver::Read(dir_inode.i_addr[0] * BLOCK_SIZE, (char *)&dir, sizeof(Directory));
+
+    for (int i = 2; i < dir_inode.i_size; i++)
+    {
+        string entry_name = string(dir.d_filename[i]);
+        Inode entry_inode;
+        FileSystem::Load_Inode(entry_inode, dir.d_inode_num[i]);
+        vector<string> path_temp(path);
+        path_temp.push_back(entry_name);
+
+        if (entry_inode.i_mode == 0)
+        {
+            if (!Verify_Before_Rm(path_temp))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (!Verify_Before_Rmdir(path_temp))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 // Recursively delete
 void FileManager::Remove_Dir(vector<string> path)
 {
@@ -135,6 +172,7 @@ void FileManager::Remove_Dir(vector<string> path)
     string dir_name = path[path.size() - 1];
     path.pop_back();
     int parent_directory_inode_num = Get_Inode_Num(path);
+    path.push_back(dir_name);
     if (parent_directory_inode_num == -1)
     {
         cout << "This Directory Doesn't Exist!" << endl;
@@ -164,6 +202,13 @@ void FileManager::Remove_Dir(vector<string> path)
         }
         else
         {
+
+            if (!Verify_Before_Rmdir(path))
+            {
+                cout << "You Cannot Remove This Directory!" << endl;
+                return;
+            }
+
             // Recursively remove the subdirectories and files contained by the directory which would be deleted
             // If We don't recursively remove these stuffs, we cannot free the space they occupy
             {
@@ -286,6 +331,43 @@ void FileManager::Create_File(vector<string> path)
     }
 }
 
+bool FileManager::Verify_Before_Rm(vector<string> path)
+{
+    int file_inode_num = Get_Inode_Num(path);
+    Inode file_inode;
+    FileSystem::Load_Inode(file_inode, file_inode_num);
+
+    // merge path component into a string, as is convenient to judge whether this file was already opened
+    string path_string = "";
+    for (unsigned int i = 1; i < path.size(); i++)
+    {
+        path_string += "/" + path[i];
+    }
+
+    // Judge whether this file is already closed
+    if (f_open_map.count(path_string))
+    {
+        // cout << "This File Hasn't Been Closed! You Should Close It Before Removing!" << endl;
+        return false;
+    }
+
+    // Verify the permission
+    if (file_inode.i_gid != g_user.gid && ((file_inode.i_permission & Inode::ELSE_W) == false) && g_user.uid != 0)
+    {
+        return false;
+    }
+    if (file_inode.i_uid != g_user.uid && ((file_inode.i_permission & Inode::GROUP_W) == false) && g_user.uid != 0)
+    {
+        return false;
+    }
+    if (((file_inode.i_permission & Inode::Owner_W) == false) && g_user.uid != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 void FileManager::Remove_File(vector<string> path)
 {
     vector<string> path_tmp(path);
@@ -317,70 +399,42 @@ void FileManager::Remove_File(vector<string> path)
     }
     else
     {
-
-        // merge path component into a string, as is convenient to judge whether this file was already opened
-        string path_string = "";
-        for (unsigned int i = 1; i < path_tmp.size(); i++)
+        if (!Verify_Before_Rm(path))
         {
-            path_string += "/" + path_tmp[i];
-        }
-
-        // Judge whether this file is already closed
-        if (f_open_map.count(path_string))
-        {
-            cout << "This File Hasn't Been Closed! You Should Close It Before Removing!" << endl;
+            cout << "You Cannot Delete This File, For You Haven't Close It Or You Haven't The Permission To Delete!" << endl;
             return;
         }
-        else
+
+        Inode file_inode;
+        FileSystem::Load_Inode(file_inode, file_inode_num);
+
+        // release all space
+        file_inode.Free_All_Space();
+
+        FileSystem::Free_Inode(file_inode_num);
+
+        // modify parent directory file
+        Directory parent_dir;
+        DiskDriver::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
         {
-            Inode file_inode;
-            FileSystem::Load_Inode(file_inode, file_inode_num);
-
-            // Verify the permission
-            if (file_inode.i_gid != g_user.gid && (file_inode.i_permission & Inode::ELSE_W) == false && g_user.uid != 0)
+            int i = 0;
+            while (string(parent_dir.d_filename[i]) != file_name)
             {
-                cout << "Current User Doesn't Have Permission To Delete!" << endl;
-                return;
+                i++;
             }
-            if (file_inode.i_uid != g_user.uid && (file_inode.i_permission & Inode::GROUP_W) == false && g_user.uid != 0)
+            while (i + 1 < parent_directory_inode.i_size)
             {
-                cout << "Current User Doesn't Have Permission To Delete!" << endl;
-                return;
+                strcpy(parent_dir.d_filename[i], parent_dir.d_filename[i + 1]);
+                parent_dir.d_inode_num[i] = parent_dir.d_inode_num[i + 1];
+                i++;
             }
-            if ((file_inode.i_permission & Inode::Owner_W) == false && g_user.uid != 0)
-            {
-                cout << "Current User Doesn't Have Permission To Delete!" << endl;
-                return;
-            }
-
-            // release all space
-            file_inode.Free_All_Space();
-
-            FileSystem::Free_Inode(file_inode_num);
-
-            // modify parent directory file
-            Directory parent_dir;
-            DiskDriver::Read(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
-            {
-                int i = 0;
-                while (string(parent_dir.d_filename[i]) != file_name)
-                {
-                    i++;
-                }
-                while (i + 1 < parent_directory_inode.i_size)
-                {
-                    strcpy(parent_dir.d_filename[i], parent_dir.d_filename[i + 1]);
-                    parent_dir.d_inode_num[i] = parent_dir.d_inode_num[i + 1];
-                    i++;
-                }
-            }
-            DiskDriver::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
-
-            parent_directory_inode.i_size--;
-            FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
-
-            cout << "Successfully Removing This File!" << endl;
         }
+        DiskDriver::Write(parent_directory_inode.i_addr[0] * BLOCK_SIZE, (char *)&parent_dir, sizeof(Directory));
+
+        parent_directory_inode.i_size--;
+        FileSystem::Store_Inode(parent_directory_inode, parent_directory_inode_num);
+
+        cout << "Successfully Removing This File!" << endl;
     }
 }
 
@@ -404,17 +458,17 @@ File *FileManager::Open_File(vector<string> path)
     }
 
     // Verify the permission
-    if (inode.i_gid != g_user.gid && (inode.i_permission & Inode::ELSE_R) == false && g_user.uid != 0)
+    if (inode.i_gid != g_user.gid && ((inode.i_permission & Inode::ELSE_R) == false) && g_user.uid != 0)
     {
         // cout << "Current User Doesn't Have Permission To Open!" << endl;
         return NULL;
     }
-    if (inode.i_uid != g_user.uid && (inode.i_permission & Inode::GROUP_R) == false && g_user.uid != 0)
+    if (inode.i_uid != g_user.uid && ((inode.i_permission & Inode::GROUP_R) == false) && g_user.uid != 0)
     {
         // cout << "Current User Doesn't Have Permission To Open!" << endl;
         return NULL;
     }
-    if ((inode.i_permission & Inode::Owner_R) == false && g_user.uid != 0)
+    if (((inode.i_permission & Inode::Owner_R) == false) && g_user.uid != 0)
     {
         // cout << "Current User Doesn't Have Permission To Open!" << endl;
         return NULL;
@@ -479,6 +533,25 @@ void FileManager::Close_File(vector<string> path)
 
         // cout << "Close File Successfully!" << endl;
     }
+}
+
+unsigned int FileManager::L_Seek_Pos(vector<string> path)
+{
+    string path_string = "";
+    for (unsigned int i = 1; i < path.size(); i++)
+    {
+        path_string += "/" + path[i];
+    }
+    if (f_open_map.count(path_string) == 0)
+    {
+        return -1;
+    }
+    else
+    {
+        File *file = f_open_map[path_string];
+        return file->f_offset;
+    }
+    return -1;
 }
 
 void FileManager::L_Seek(vector<string> path, unsigned int pos)
@@ -548,18 +621,22 @@ unsigned int FileManager::Write_File(vector<string> path, const char *content, u
             FileSystem::Load_Inode(inode, file->f_inode_id);
 
             // Verify the permission
-            if ((inode.i_gid != g_user.gid && inode.i_permission & Inode::ELSE_W) == false && g_user.uid != 0)
+            if (inode.i_gid != g_user.gid && ((inode.i_permission & Inode::ELSE_W) == false) && g_user.uid != 0)
             {
+                // cout << inode.i_gid << " " << g_user.gid << endl;
+                // cout << "aaa" << endl;
                 cout << "Current User Doesn't Have Permission To Write!" << endl;
                 return 0;
             }
-            if ((inode.i_uid != g_user.uid && inode.i_permission & Inode::GROUP_W) == false && g_user.uid != 0)
+            if (inode.i_uid != g_user.uid && ((inode.i_permission & Inode::GROUP_W) == false) && g_user.uid != 0)
             {
+                // cout << "bbb" << endl;
                 cout << "Current User Doesn't Have Permission To Write!" << endl;
                 return 0;
             }
-            if ((inode.i_permission & Inode::Owner_W) == false && g_user.uid != 0)
+            if (((inode.i_permission & Inode::Owner_W) == false) && g_user.uid != 0)
             {
+                // cout << "ccc" << endl;
                 cout << "Current User Doesn't Have Permission To Write!" << endl;
                 return 0;
             }
@@ -647,17 +724,17 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
         FileSystem::Load_Inode(inode, file->f_inode_id);
 
         // Verify the permission
-        if (inode.i_gid != g_user.gid && (inode.i_permission & Inode::ELSE_R) == false && g_user.uid != 0)
+        if (inode.i_gid != g_user.gid && ((inode.i_permission & Inode::ELSE_R) == false) && g_user.uid != 0)
         {
             cout << "Current User Doesn't Have Permission To Read!" << endl;
             return 0;
         }
-        if (inode.i_uid != g_user.uid && (inode.i_permission & Inode::GROUP_R) == false && g_user.uid != 0)
+        if (inode.i_uid != g_user.uid && ((inode.i_permission & Inode::GROUP_R) == false) && g_user.uid != 0)
         {
             cout << "Current User Doesn't Have Permission To Read!" << endl;
             return 0;
         }
-        if ((inode.i_permission & Inode::Owner_R) == false && g_user.uid != 0)
+        if (((inode.i_permission & Inode::Owner_R) == false) && g_user.uid != 0)
         {
             cout << "Current User Doesn't Have Permission To Read!" << endl;
             return 0;
@@ -668,6 +745,7 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
         if (length > free_file_size)
         {
             cout << "Don't Try To Read More Than The File!" << endl;
+            return 0;
         }
 
         // Read
