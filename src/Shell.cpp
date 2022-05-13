@@ -600,7 +600,7 @@ void Shell::Func_Chmod()
     }
     else if (args[2].length() != 3)
     {
-        cout << "Illegal Arguments" << endl;
+        cout << "Illegal Arguments!" << endl;
         return;
     }
     else if (g_user.uid != inode.i_uid && g_user.uid != 0)
