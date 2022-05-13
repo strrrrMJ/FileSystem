@@ -279,7 +279,7 @@ unsigned int FileSystem::Allocate_Inode()
             }
         }
     }
-    return -1; // 正常情况下, 不会在这里返回
+    return -1; // It won't return here under normal circumtances.
 }
 
 void FileSystem::Free_Inode(unsigned int inode_num)
