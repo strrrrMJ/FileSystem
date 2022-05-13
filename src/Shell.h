@@ -44,7 +44,7 @@ private:
     void Func_Exit();
     void Func_Mkdir();
     void Func_Cd();
-    void Func_Create();
+    void Func_Touch();
     void Func_Rm();
     void Func_Rmdir();
     void Func_Close();

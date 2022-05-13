@@ -314,7 +314,7 @@ void Shell::Func_Mkdir()
     FileManager::Create_Dir(path);
 }
 
-void Shell::Func_Create()
+void Shell::Func_Touch()
 {
     vector<string> path_t;
     Parse_Path(args[1], path_t);
@@ -598,27 +598,35 @@ void Shell::Func_Chmod()
         cout << endl;
         return;
     }
-    if (args[2].length() != 3)
+    else if (args[2].length() != 3)
     {
         cout << "Illegal Arguments" << endl;
         return;
     }
-
-    unsigned short o = args[2][0] - '0';
-    unsigned short g = args[2][1] - '0';
-    unsigned short e = args[2][2] - '0';
-
-    if (o<0 | g<0 | e<0 | o> 7 | g> 7 | e> 7)
+    else if (g_user.uid != inode.i_uid && g_user.uid != 0)
     {
-        cout << "Illegal Arguments" << endl;
+        cout << "Only The File's Owner Can Modify Its Permissions!" << endl;
         return;
     }
+    else
+    {
 
-    unsigned short new_permission = o * 64 + g * 8 + e;
+        unsigned short o = args[2][0] - '0';
+        unsigned short g = args[2][1] - '0';
+        unsigned short e = args[2][2] - '0';
 
-    inode.i_permission = new_permission;
+        if (o<0 | g<0 | e<0 | o> 7 | g> 7 | e> 7)
+        {
+            cout << "Illegal Arguments" << endl;
+            return;
+        }
 
-    FileSystem::Store_Inode(inode, inode_num);
+        unsigned short new_permission = o * 64 + g * 8 + e;
+
+        inode.i_permission = new_permission;
+
+        FileSystem::Store_Inode(inode, inode_num);
+    }
 }
 
 void Shell::Func_Register()
@@ -722,7 +730,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("exit")] = &Shell::Func_Exit;
     this->command_exec[string("mkdir")] = &Shell::Func_Mkdir;
     this->command_exec[string("cd")] = &Shell::Func_Cd;
-    this->command_exec[string("create")] = &Shell::Func_Create;
+    this->command_exec[string("touch")] = &Shell::Func_Touch;
     this->command_exec[string("rmdir")] = &Shell::Func_Rmdir;
     this->command_exec[string("rm")] = &Shell::Func_Rm;
     this->command_exec[string("write")] = &Shell::Func_Write;
