@@ -51,8 +51,7 @@ private:
     void Func_Open();
     void Func_Write();
     void Func_Read();
-    void Func_Seekg();
-    void Func_help();
+    void Func_Lseek();
     void Func_Help();
     void Func_Tree();
     void Func_Logout();

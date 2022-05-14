@@ -201,3 +201,126 @@ void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_ad
     }
     LRU(buf);
 }
+
+void BufferManager::Flush()
+{
+    Buf *p_buf = uselist.forw;
+    while (p_buf != &uselist)
+    {
+        if (p_buf->dirty)
+        {
+            DiskDriver::Write(p_buf->b_blkno * BLOCK_SIZE, (char *)p_buf->b_data, BLOCK_SIZE);
+        }
+        p_buf = p_buf->forw;
+    }
+}
+
+// #include <cstring>
+// #include "DiskDriver.h"
+// #include "BufferManager.h"
+// #include <iostream>
+
+// using namespace std;
+
+// BufferBlock BufferManager::buffer_pool[BUFFER_BLOCK_NUM];
+
+// BufferBlock *BufferManager::head;
+
+// void BufferManager::Init_Buffer_System()
+// {
+//     head = &buffer_pool[0];
+
+//     for (int i = 0; i < BUFFER_BLOCK_NUM; i++)
+//     {
+//         buffer_pool[i].valid = false;
+//     }
+
+//     for (int i = 0; i <= BUFFER_BLOCK_NUM - 2; i++)
+//     {
+//         buffer_pool[i].forward = &buffer_pool[i + 1];
+//     }
+//     buffer_pool[BUFFER_BLOCK_NUM - 1].forward = &buffer_pool[0];
+
+//     for (int i = 1; i <= BUFFER_BLOCK_NUM - 1; i++)
+//     {
+//         buffer_pool[i].backward = &buffer_pool[i - 1];
+//     }
+//     buffer_pool[0].backward = &buffer_pool[BUFFER_BLOCK_NUM - 1];
+// }
+
+// void BufferManager::Write_All_Buffers_To_Disk()
+// {
+//     BufferBlock *ptr = head;
+//     while (ptr->forward != head)
+//     {
+//         if (ptr->valid && ptr->dirty)
+//         {
+//             DiskDriver::Write(ptr->blkno * BLOCK_SIZE, (char *)head->data, BLOCK_SIZE);
+//         }
+//         ptr->valid = false;
+//     }
+//     if (ptr->valid && ptr->dirty)
+//     {
+//         DiskDriver::Write(ptr->blkno * BLOCK_SIZE, (char *)head->data, BLOCK_SIZE);
+//     }
+//     ptr->valid = false;
+// }
+
+// void BufferManager::Read(unsigned int blkno, unsigned int offset, char *mem_addr, unsigned int size)
+// {
+//     BufferBlock *buf = Fetch_Buffer(blkno);
+//     memcpy(mem_addr, buf->data + offset, size);
+//     buf->blkno = blkno;
+//     buf->valid = true;
+//     buf->dirty = false;
+//     Tail_Insert(buf);
+// }
+
+// void BufferManager::Write(unsigned int blkno, unsigned int offset, char *mem_addr, unsigned int size)
+// {
+
+//     BufferBlock *buf = Fetch_Buffer(blkno);
+//     memcpy(buf->data + offset, mem_addr, size);
+//     buf->blkno = blkno;
+//     buf->valid = true;
+//     buf->dirty = true;
+//     Tail_Insert(buf);
+// }
+
+// void BufferManager::Tail_Insert(BufferBlock *buf)
+// {
+//     buf->forward = head;
+//     buf->backward = head->backward;
+//     head->backward->forward = buf;
+//     head->backward = buf;
+// }
+
+// BufferBlock *BufferManager::Fetch_Buffer(unsigned int blkno)
+// {
+//     BufferBlock *ptr = head;
+//     while (ptr->backward != head && (ptr->valid == false || ptr->blkno != blkno))
+//     {
+//         ptr = ptr->backward;
+//     }
+//     if (ptr->backward != head)
+//     {
+//         ptr->backward->forward = ptr->forward;
+//         ptr->forward->backward = ptr->backward;
+//         return ptr;
+//     }
+//     else
+//     {
+//         if (head->valid == true && head->dirty == true)
+//         {
+//             DiskDriver::Write(head->blkno * BLOCK_SIZE, (char *)head->data, BLOCK_SIZE);
+//         }
+//         DiskDriver::Read(blkno * BLOCK_SIZE, (char *)head->data, BLOCK_SIZE);
+
+//         head->backward->forward = head->forward;
+//         head->forward->backward = head->backward;
+
+//         head = head->forward;
+
+//         return head;
+//     }
+// }

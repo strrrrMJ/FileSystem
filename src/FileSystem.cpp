@@ -125,37 +125,37 @@ void FileSystem::Init_Register()
     FileManager::Write_File(register_file_path, (char *)&root, sizeof(User));
 
     // add Bob into this file
-    User Bob;
-    Bob.gid = 1;
-    Bob.uid = 1;
-    strcpy(Bob.username, "Bob");
-    strcpy(Bob.password, "123456");
-    FileManager::Write_File(register_file_path, (char *)&Bob, sizeof(User));
+    User Mo;
+    Mo.gid = 1;
+    Mo.uid = 1;
+    strcpy(Mo.username, "Mo");
+    strcpy(Mo.password, "Mo");
+    FileManager::Write_File(register_file_path, (char *)&Mo, sizeof(User));
 
     // add Tom into this file
-    User Tom;
-    Tom.gid = 1;
-    Tom.uid = 2;
-    strcpy(Tom.username, "Tom");
-    strcpy(Tom.password, "123456");
-    FileManager::Write_File(register_file_path, (char *)&Tom, sizeof(User));
+    User Wang;
+    Wang.gid = 1;
+    Wang.uid = 2;
+    strcpy(Wang.username, "Wang");
+    strcpy(Wang.password, "Wang");
+    FileManager::Write_File(register_file_path, (char *)&Wang, sizeof(User));
 
     // close it
     FileManager::Close_File(register_file_path);
 
     // create Bob's own user directory
-    vector<string> Bob_directory_path;
-    Bob_directory_path.push_back(string("root"));
-    Bob_directory_path.push_back(string("Users"));
-    Bob_directory_path.push_back(string("Bob"));
-    FileManager::Create_Dir(Bob_directory_path);
+    vector<string> Mo_directory_path;
+    Mo_directory_path.push_back(string("root"));
+    Mo_directory_path.push_back(string("Users"));
+    Mo_directory_path.push_back(string("Mo"));
+    FileManager::Create_Dir(Mo_directory_path);
 
     // create Tom's own user directory
-    vector<string> Tom_directory_path;
-    Tom_directory_path.push_back(string("root"));
-    Tom_directory_path.push_back(string("Users"));
-    Tom_directory_path.push_back(string("Tom"));
-    FileManager::Create_Dir(Tom_directory_path);
+    vector<string> Wang_directory_path;
+    Wang_directory_path.push_back(string("root"));
+    Wang_directory_path.push_back(string("Users"));
+    Wang_directory_path.push_back(string("Wang"));
+    FileManager::Create_Dir(Wang_directory_path);
 }
 
 User FileSystem::Check_User(std::string username, std::string password)

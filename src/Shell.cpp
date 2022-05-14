@@ -301,6 +301,7 @@ void Shell::Func_Ls()
 
 void Shell::Func_Exit()
 {
+    BufferManager::Flush();
     cout << "Exit!" << endl;
     this->flag = false;
 }
@@ -522,7 +523,7 @@ void Shell::Func_Read()
     }
 }
 
-void Shell::Func_Seekg()
+void Shell::Func_Lseek()
 {
     vector<string> path_t;
     Parse_Path(args[1], path_t);
@@ -739,7 +740,7 @@ void Shell::Init_Command_Exec()
     this->command_exec[string("open")] = &Shell::Func_Open;
     this->command_exec[string("openlist")] = &Shell::Func_Openlist;
     this->command_exec[string("close")] = &Shell::Func_Close;
-    this->command_exec[string("seekg")] = &Shell::Func_Seekg;
+    this->command_exec[string("lseek")] = &Shell::Func_Lseek;
     this->command_exec[string("tree")] = &Shell::Func_Tree;
     this->command_exec[string("logout")] = &Shell::Func_Logout;
     this->command_exec[string("chmod")] = &Shell::Func_Chmod;
@@ -948,4 +949,164 @@ void Shell::Transform_Path(vector<string> &path_t, vector<string> &path)
 
 void Shell::Func_Help()
 {
+    if (args.size() == 1)
+    {
+        cout << "For More Information On A Specific Command, Type HELP Command-name." << endl
+             << endl;
+        cout << "cd             Changes The Current Directory." << endl;
+        cout << "close          Close A File." << endl;
+        cout << "chmod          Change Specific File's Access Permission." << endl;
+        cout << "exit           Exit File System." << endl;
+        cout << "help           Print Help Documentation." << endl;
+        cout << "ls             List Files And Directories Included In Current Directory." << endl;
+        cout << "logout         User Log Out." << endl;
+        cout << "lseek          Move A File's R/W Pointer Or Print The Pointer's Offset." << endl;
+        cout << "mkdir          Create A New Directory." << endl;
+        cout << "open           Open A File." << endl;
+        cout << "openlist       Print Files Which Have Been Already Opened." << endl;
+        cout << "rmdir          Remove A Directory." << endl;
+        cout << "rm             Remove A File." << endl;
+        cout << "read           Read A File." << endl;
+        cout << "register       Register A User." << endl;
+        cout << "touch          Create A New File." << endl;
+        cout << "tree           Print File Structure Tree Of Current Directory." << endl;
+        cout << "userlist       Print User List The File System Now Registered." << endl;
+        cout << "write          Write A File." << endl
+             << endl;
+        cout << "For More Information On A Specific Command, Type HELP Command-name." << endl;
+    }
+    else if (args.size() == 2)
+    {
+        if (args[1] == "cd")
+        {
+            cout << "Changes The Current Directory." << endl;
+            cout << "Usage: cd <path>" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: cd ../Users/dir0" << endl;
+        }
+        else if (args[1] == "close")
+        {
+            cout << "Close A File." << endl;
+            cout << "Usage: close <file_path>" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: close ../Users/file0" << endl;
+        }
+        else if (args[1] == "chmod")
+        {
+            cout << "Change Specific File's Access Permission." << endl;
+            cout << "Usage: chmod <file_pat> <7~0>^3" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: chmod ../Users/file0 644" << endl;
+        }
+        else if (args[1] == "exit")
+        {
+            cout << "Exit File System." << endl;
+            cout << "Usage: exit" << endl;
+        }
+        else if (args[1] == "ls")
+        {
+            cout << "List Files And Directories Included In Current Directory." << endl;
+            cout << "Usage: ls [-l]" << endl;
+            cout << "-l: List Details Of This Directory." << endl;
+        }
+        else if (args[1] == "logout")
+        {
+            cout << "User Log Out." << endl;
+            cout << "Usage: logout" << endl;
+        }
+        else if (args[1] == "lseek")
+        {
+            cout << "Move A File's R/W Pointer Or Print The Pointer's Offset." << endl;
+            cout << "Usage: lseek <file_path> [offset_from_beg]" << endl;
+            cout << "offset_from_beg: R/W Pointer's Offset From Beginning Of The File" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: lseek ../Users/file0 10" << endl;
+        }
+        else if (args[1] == "mkdir")
+        {
+            cout << "Create A New Directory." << endl;
+            cout << "Usage: mkdir <directory_path>" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: mkdir ../Users/dir0" << endl;
+        }
+        else if (args[1] == "open")
+        {
+            cout << "Open A File." << endl;
+            cout << "Usage: open <file_path>" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: open ../Users/file0" << endl;
+        }
+        else if (args[1] == "openlist")
+        {
+            cout << "Print Files Which Have Been Already Opened." << endl;
+            cout << "Usage: openlist" << endl;
+        }
+        else if (args[1] == "rmdir")
+        {
+            cout << "Remove A Directory." << endl;
+            cout << "Usage: rmdir <directory_path>" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: rmdir ../Users/dir0" << endl;
+        }
+        else if (args[1] == "rm")
+        {
+            cout << "Remove A File." << endl;
+            cout << "Usage: rm <file_path>" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: rm ../Users/file0" << endl;
+        }
+        else if (args[1] == "read")
+        {
+            cout << "Read A File." << endl;
+            cout << "Usage: read <source_file_path> -s <size>" << endl;
+            cout << "       read <source_file_path> -f <destination_file_path>" << endl;
+            cout << "-s: Output To Screen" << endl;
+            cout << "-f: Output To File" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: read ../Users/file0 -s 10" << endl;
+            cout << "    read ../Users/file0 -f destination" << endl;
+        }
+        else if (args[1] == "register")
+        {
+            cout << "Register A User." << endl;
+            cout << "Usage: register <username> <password>" << endl;
+            cout << "Eg: register Tom 123456" << endl;
+        }
+        else if (args[1] == "touch")
+        {
+            cout << "Create A File." << endl;
+            cout << "Usage: touch <file_path>" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: touch ../Users/file0" << endl;
+        }
+        else if (args[1] == "tree")
+        {
+            cout << "Print File Structure Tree Of Current Directory." << endl;
+            cout << "Usage: tree" << endl;
+        }
+        else if (args[1] == "userlist")
+        {
+            cout << "Print User List The File System Now Registered." << endl;
+            cout << "Usage: userlist" << endl;
+        }
+        else if (args[1] == "write")
+        {
+            cout << "Write A File." << endl;
+            cout << "Usage: read <destination_file_path> -s <content>" << endl;
+            cout << "       read <destination_file_path> -f <source_file_path>" << endl;
+            cout << "-s: Screen Content Will Be Written Into Destination File" << endl;
+            cout << "-f: Specific File's Content Will Be Written Into Destination File" << endl;
+            cout << "This Command Supports Absolute/Relative Path." << endl;
+            cout << "Eg: write ../Users/file0 -s HelloWorld!" << endl;
+            cout << "    write ../Users/file0 -f source" << endl;
+        }
+        else
+        {
+            cout << "Wrong Instruction!" << endl;
+        }
+    }
+    else
+    {
+        cout << "Wrong Instruction!" << endl;
+    }
 }
