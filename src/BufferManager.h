@@ -3,7 +3,7 @@
 
 static const unsigned int BLOCK_SIZE = 512;
 
-static const unsigned int BUFFER_NUM = 1000;
+static const unsigned int BUFFER_NUM = 10000;
 // 0x423670
 struct Buf
 {
@@ -28,6 +28,8 @@ private:
     static Buf *Allocate_Buffer();
 
     static Buf *Fetch_Buffer(unsigned int);
+
+    static void LRU(Buf *);
 
 public:
     // static void Read(int offset, char *mem_addr, int size);

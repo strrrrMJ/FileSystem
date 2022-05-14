@@ -155,6 +155,17 @@ Buf *BufferManager::Fetch_Buffer(unsigned int blk_no)
 //     DiskDriver::Write(blk_no * BLOCK_SIZE + offset, mem_addr, size);
 // }
 
+void BufferManager::LRU(Buf *buf)
+{
+    buf->forw->back = buf->back;
+    buf->back->forw = buf->forw;
+
+    buf->forw = &uselist;
+    buf->back = uselist.back;
+    uselist.back->forw = buf;
+    uselist.back = buf;
+}
+
 void BufferManager::Read(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
 {
     Buf *buf = Fetch_Buffer(blk_no);
@@ -168,6 +179,7 @@ void BufferManager::Read(unsigned int blk_no, unsigned int offset, char *mem_add
     }
 
     memcpy(mem_addr, buf->b_data + offset, size);
+    LRU(buf);
 }
 
 void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
@@ -187,4 +199,5 @@ void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_ad
     {
         buf->dirty = true;
     }
+    LRU(buf);
 }
