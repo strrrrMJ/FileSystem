@@ -7,32 +7,53 @@ Buf BufferManager::freelist;
 Buf BufferManager::uselist;
 Buf BufferManager::buf_pool[BUFFER_NUM];
 
+/**************************************************************************/
+
+void BufferManager::Read(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
+{
+    DiskDriver::Read(blk_no * BLOCK_SIZE + offset, (char *)mem_addr, size);
+}
+
+void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
+{
+    DiskDriver::Write(blk_no * BLOCK_SIZE + offset, (char *)mem_addr, size);
+}
+
+void BufferManager::Flush()
+{
+}
+
 void BufferManager::Init_Buffer_System()
 {
-    // cout << "Init Buffer System..." << endl;
-    uselist.forw = uselist.back = &uselist;
-    uselist.b_blkno = -1;
-    // cout << "Init Freelist..." << endl;
-    Buf *tmp1 = &freelist;
-    for (int i = 0; i < BUFFER_NUM; i++)
-    {
-        tmp1->forw = &buf_pool[i];
-        tmp1 = tmp1->forw;
-    }
-    tmp1->forw = &freelist;
-    // cout << "Init Freelist Successfully!" << endl;
-    Buf *tmp2 = &freelist;
-    // cout << "Init Uselist..." << endl;
-    for (int i = BUFFER_NUM - 1; i >= 0; i--)
-    {
-        tmp2->back = &buf_pool[i];
-        tmp2 = tmp2->back;
-    }
-    tmp2->back = &freelist;
-    freelist.b_blkno = -1;
-    // cout << "Init Uselist Successfully!" << endl;
-    // cout << "Init Buffer System Successfully!" << endl;
 }
+/**************************************************************************/
+
+// void BufferManager::Init_Buffer_System()
+// {
+//     // cout << "Init Buffer System..." << endl;
+//     uselist.forw = uselist.back = &uselist;
+//     uselist.b_blkno = -1;
+//     // cout << "Init Freelist..." << endl;
+//     Buf *tmp1 = &freelist;
+//     for (int i = 0; i < BUFFER_NUM; i++)
+//     {
+//         tmp1->forw = &buf_pool[i];
+//         tmp1 = tmp1->forw;
+//     }
+//     tmp1->forw = &freelist;
+//     // cout << "Init Freelist Successfully!" << endl;
+//     Buf *tmp2 = &freelist;
+//     // cout << "Init Uselist..." << endl;
+//     for (int i = BUFFER_NUM - 1; i >= 0; i--)
+//     {
+//         tmp2->back = &buf_pool[i];
+//         tmp2 = tmp2->back;
+//     }
+//     tmp2->back = &freelist;
+//     freelist.b_blkno = -1;
+//     // cout << "Init Uselist Successfully!" << endl;
+//     // cout << "Init Buffer System Successfully!" << endl;
+// }
 
 void BufferManager::Free_Buffer(Buf *buf)
 {
@@ -166,54 +187,54 @@ void BufferManager::LRU(Buf *buf)
     uselist.back = buf;
 }
 
-void BufferManager::Read(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
-{
-    Buf *buf = Fetch_Buffer(blk_no);
-    if (!buf)
-    {
-        // cout << "Allocate Buffer" << endl;
-        buf = Allocate_Buffer();
-        buf->b_blkno = blk_no;
+// void BufferManager::Read(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
+// {
+//     Buf *buf = Fetch_Buffer(blk_no);
+//     if (!buf)
+//     {
+//         // cout << "Allocate Buffer" << endl;
+//         buf = Allocate_Buffer();
+//         buf->b_blkno = blk_no;
 
-        DiskDriver::Read(buf->b_blkno * BLOCK_SIZE, (char *)buf->b_data, BLOCK_SIZE);
-    }
+//         DiskDriver::Read(buf->b_blkno * BLOCK_SIZE, (char *)buf->b_data, BLOCK_SIZE);
+//     }
 
-    memcpy(mem_addr, buf->b_data + offset, size);
-    LRU(buf);
-}
+//     memcpy(mem_addr, buf->b_data + offset, size);
+//     LRU(buf);
+// }
 
-void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
-{
+// void BufferManager::Write(unsigned int blk_no, unsigned int offset, char *mem_addr, unsigned int size)
+// {
 
-    Buf *buf = Fetch_Buffer(blk_no);
-    if (!buf)
-    {
-        buf = Allocate_Buffer();
-        buf->b_blkno = blk_no;
+//     Buf *buf = Fetch_Buffer(blk_no);
+//     if (!buf)
+//     {
+//         buf = Allocate_Buffer();
+//         buf->b_blkno = blk_no;
 
-        DiskDriver::Read(buf->b_blkno * BLOCK_SIZE, (char *)buf->b_data, BLOCK_SIZE);
-    }
+//         DiskDriver::Read(buf->b_blkno * BLOCK_SIZE, (char *)buf->b_data, BLOCK_SIZE);
+//     }
 
-    memcpy(buf->b_data + offset, mem_addr, size);
-    if (size != 0)
-    {
-        buf->dirty = true;
-    }
-    LRU(buf);
-}
+//     memcpy(buf->b_data + offset, mem_addr, size);
+//     if (size != 0)
+//     {
+//         buf->dirty = true;
+//     }
+//     LRU(buf);
+// }
 
-void BufferManager::Flush()
-{
-    Buf *p_buf = uselist.forw;
-    while (p_buf != &uselist)
-    {
-        if (p_buf->dirty)
-        {
-            DiskDriver::Write(p_buf->b_blkno * BLOCK_SIZE, (char *)p_buf->b_data, BLOCK_SIZE);
-        }
-        p_buf = p_buf->forw;
-    }
-}
+// void BufferManager::Flush()
+// {
+//     Buf *p_buf = uselist.forw;
+//     while (p_buf != &uselist)
+//     {
+//         if (p_buf->dirty)
+//         {
+//             DiskDriver::Write(p_buf->b_blkno * BLOCK_SIZE, (char *)p_buf->b_data, BLOCK_SIZE);
+//         }
+//         p_buf = p_buf->forw;
+//     }
+// }
 
 // #include <cstring>
 // #include "DiskDriver.h"
