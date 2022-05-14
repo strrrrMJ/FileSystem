@@ -24,6 +24,3 @@ int main()
 
     return 0;
 }
-
-//Test1
-//Test2
