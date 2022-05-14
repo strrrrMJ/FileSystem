@@ -118,7 +118,7 @@ void Inode::Free_All_Space()
     for (unsigned int i = 0; i < block_cnt; i++)
     {
         unsigned int physical_block_num = Offset_To_Index(i * BLOCK_SIZE);
-        cout << "Level1: Free block: " << physical_block_num << endl;
+        // cout << "Level1: Free block: " << physical_block_num << endl;
         FileSystem::Free_Block(physical_block_num);
     }
     if (block_cnt > DIRECT_PTR_NUM)
@@ -128,14 +128,14 @@ void Inode::Free_All_Space()
         {
             for (unsigned int i = 0; i < level2_index_table_num; i++)
             {
-                cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + i] << endl;
+                // cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + i] << endl;
                 FileSystem::Free_Block(i_addr[DIRECT_PTR_NUM + i]);
             }
         }
         else
         {
-            cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM] << endl;
-            cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + 1] << endl;
+            // cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM] << endl;
+            // cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + 1] << endl;
             FileSystem::Free_Block(i_addr[DIRECT_PTR_NUM]);
             FileSystem::Free_Block(i_addr[DIRECT_PTR_NUM + 1]);
             unsigned int level2_index_table_num_remain = ceil(float(level2_index_table_num - SEC_PTR_NUM) / PTR_IN_BLOCK_NUM);
@@ -146,11 +146,11 @@ void Inode::Free_All_Space()
                 BufferManager::Read(i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i], 0, (char *)level2_index_table, BLOCK_SIZE);
                 for (unsigned int j = 0; j < PTR_IN_BLOCK_NUM && j < level3_index_table_num_remain; j++)
                 {
-                    cout << "Level3: Free block: " << level2_index_table[j] << endl;
+                    // cout << "Level3: Free block: " << level2_index_table[j] << endl;
                     FileSystem::Free_Block(level2_index_table[j]);
                 }
                 level3_index_table_num_remain -= PTR_IN_BLOCK_NUM;
-                cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i] << endl;
+                // cout << "Level2: Free block: " << i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i] << endl;
                 FileSystem::Free_Block(i_addr[DIRECT_PTR_NUM + SEC_PTR_NUM + i]);
             }
         }

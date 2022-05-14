@@ -70,7 +70,8 @@ void FileSystem::Init_All_Free_Blocks()
 void FileSystem::Init_BitMap()
 {
     unsigned int bitmap[INODE_NUM] = {1};
-    BufferManager::Write(BITMAP_START_INDEX, 0, (char *)bitmap, BITMAP_SIZE);
+    BufferManager::Write(BITMAP_START_INDEX, 0, (char *)bitmap, BLOCK_SIZE);
+    BufferManager::Write(BITMAP_START_INDEX + 1, 0, (char *)(bitmap + 128), BLOCK_SIZE);
 }
 
 void FileSystem::Init_Root()
@@ -200,7 +201,7 @@ void FileSystem::Format_Disk()
     {
         throw "DISK DOES NOT EXIST";
     }
-    
+
     Init_SuperBlock();
 
     Init_All_Free_Blocks();
@@ -267,7 +268,8 @@ unsigned int FileSystem::Allocate_Inode()
     else
     {
         unsigned int bitmap[INODE_NUM];
-        BufferManager::Read(BITMAP_START_INDEX, 0, (char *)bitmap, BITMAP_SIZE);
+        BufferManager::Read(BITMAP_START_INDEX, 0, (char *)bitmap, BLOCK_SIZE);
+        BufferManager::Read(BITMAP_START_INDEX + 1, 0, (char *)(bitmap + 128), BLOCK_SIZE);
         for (unsigned int i = 0; i < INODE_NUM; i++)
         {
             if (bitmap[i] == 0)
@@ -293,12 +295,16 @@ void FileSystem::Free_Inode(unsigned int inode_num)
 
 void FileSystem::Load_Inode(Inode &inode, unsigned int inode_pos)
 {
-    BufferManager::Read(INODE_START_INDEX, inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+    // BufferManager::Read(INODE_START_INDEX, inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+    int tmp = inode_pos / 8;
+    BufferManager::Read(INODE_START_INDEX + tmp, (inode_pos % 8) * INODE_SIZE, (char *)&inode, sizeof(Inode));
 }
 
 void FileSystem::Store_Inode(Inode &inode, unsigned int inode_pos)
 {
-    BufferManager::Write(INODE_START_INDEX, inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+    // BufferManager::Write(INODE_START_INDEX, inode_pos * INODE_SIZE, (char *)&inode, sizeof(Inode));
+    int tmp = inode_pos / 8;
+    BufferManager::Write(INODE_START_INDEX + tmp, (inode_pos % 8) * INODE_SIZE, (char *)&inode, sizeof(Inode));
 }
 
 void FileSystem::Boot()

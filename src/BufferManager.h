@@ -3,8 +3,8 @@
 
 static const unsigned int BLOCK_SIZE = 512;
 
-static const unsigned int BUFFER_NUM = 500;
-
+static const unsigned int BUFFER_NUM = 1000;
+// 0x423670
 struct Buf
 {
     unsigned int b_blkno;
@@ -12,7 +12,7 @@ struct Buf
     Buf *back;
     Buf *forw;
 
-    unsigned char b_data[BLOCK_SIZE];
+    char b_data[BLOCK_SIZE];
 };
 
 class BufferManager
