@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <cmath>
+#include <string>
 
 using namespace std;
 
@@ -317,6 +318,12 @@ void FileManager::Create_File(vector<string> path)
             inode.i_permission = 6 * 64 + 4 * 8 + 4;
             inode.i_uid = g_user.uid;
             inode.i_gid = g_user.gid;
+
+            /**********************************/
+            inode.reading_lock = 0;
+            inode.writing_lock = 0;
+            /**********************************/
+
             time_t t;
             time(&t);
             inode.i_time = t;
@@ -616,6 +623,26 @@ unsigned int FileManager::Write_File(vector<string> path, const char *content, u
         File *file = f_open_map[path_string];
         unsigned int &offset = file->f_offset;
 
+        /*********************************************/
+        if (g_user.uid > 0 && g_user.uid < 10000)
+        {
+            Inode inode;
+            FileSystem::Load_Inode(inode, file->f_inode_id);
+            if (inode.writing_lock)
+            {
+                cout << "The File Is Now Written. You Can't Write!" << endl;
+                return 0;
+            }
+            if (inode.reading_lock)
+            {
+                cout << "The File Is Now Read. You Can't Write!" << endl;
+                return 0;
+            }
+            inode.writing_lock = 1;
+            FileSystem::Store_Inode(inode, file->f_inode_id);
+        }
+        /*********************************************/
+
         // Judge whether this write is feasible
         unsigned int free_blocks_size = g_superblock.s_free_block_num * BLOCK_SIZE;
         unsigned int free_file_size = MAX_FILE_BLOCK_NUM * BLOCK_SIZE - offset;
@@ -637,19 +664,37 @@ unsigned int FileManager::Write_File(vector<string> path, const char *content, u
             // Verify the permission
             if (inode.i_gid != g_user.gid && ((inode.i_permission & Inode::ELSE_W) == false) && g_user.uid != 0)
             {
-                // cout << "aaa" << endl;
+                /*********************************************/
+                if (g_user.uid > 0 && g_user.uid < 10000)
+                {
+                    inode.writing_lock = 0;
+                    FileSystem::Store_Inode(inode, file->f_inode_id);
+                }
+                /*********************************************/
                 cout << "Current User Doesn't Have Permission To Write!" << endl;
                 return 0;
             }
             if (inode.i_uid != g_user.uid && ((inode.i_permission & Inode::GROUP_W) == false) && g_user.uid != 0)
             {
-                // cout << "bbb" << endl;
+                /*********************************************/
+                if (g_user.uid > 0 && g_user.uid < 10000)
+                {
+                    inode.writing_lock = 0;
+                    FileSystem::Store_Inode(inode, file->f_inode_id);
+                }
+                /*********************************************/
                 cout << "Current User Doesn't Have Permission To Write!" << endl;
                 return 0;
             }
             if (((inode.i_permission & Inode::Owner_W) == false) && g_user.uid != 0)
             {
-                // cout << "ccc" << endl;
+                /*********************************************/
+                if (g_user.uid > 0 && g_user.uid < 10000)
+                {
+                    inode.writing_lock = 0;
+                    FileSystem::Store_Inode(inode, file->f_inode_id);
+                }
+                /*********************************************/
                 cout << "Current User Doesn't Have Permission To Write!" << endl;
                 return 0;
             }
@@ -695,6 +740,16 @@ unsigned int FileManager::Write_File(vector<string> path, const char *content, u
                 inode.i_size = (offset > inode.i_size) ? offset : inode.i_size;
             }
 
+            /*********************************************/
+            if (g_user.uid > 0 && g_user.uid < 10000)
+            {
+                string tmp;
+                getline(cin, tmp);
+                cout << "Writting Is Over" << endl;
+                inode.writing_lock = 0;
+            }
+            /*********************************************/
+
             // Change the last modified time
             inode.i_time = time(NULL);
 
@@ -733,6 +788,26 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
         File *file = f_open_map[path_string];
         unsigned int &offset = file->f_offset;
 
+        /*********************************************/
+        bool temp = 0;
+        if (g_user.uid > 0 && g_user.uid < 10000)
+        {
+            Inode inode;
+            FileSystem::Load_Inode(inode, file->f_inode_id);
+            if (inode.writing_lock)
+            {
+                cout << "This File Is Now Written. You Can't Read!" << endl;
+                return 0;
+            }
+            if (inode.reading_lock == 0)
+            {
+                inode.reading_lock = 1;
+                temp = 1;
+            }
+            FileSystem::Store_Inode(inode, file->f_inode_id);
+        }
+        /*********************************************/
+
         // Get the inode
         Inode inode;
         FileSystem::Load_Inode(inode, file->f_inode_id);
@@ -740,16 +815,37 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
         // Verify the permission
         if (inode.i_gid != g_user.gid && ((inode.i_permission & Inode::ELSE_R) == false) && g_user.uid != 0)
         {
+            /*********************************************/
+            if (temp)
+            {
+                inode.reading_lock = 0;
+                FileSystem::Store_Inode(inode, file->f_inode_id);
+            }
+            /*********************************************/
             cout << "Current User Doesn't Have Permission To Read!" << endl;
             return 0;
         }
         if (inode.i_uid != g_user.uid && ((inode.i_permission & Inode::GROUP_R) == false) && g_user.uid != 0)
         {
+            /*********************************************/
+            if (temp)
+            {
+                inode.reading_lock = 0;
+                FileSystem::Store_Inode(inode, file->f_inode_id);
+            }
+            /*********************************************/
             cout << "Current User Doesn't Have Permission To Read!" << endl;
             return 0;
         }
         if (((inode.i_permission & Inode::Owner_R) == false) && g_user.uid != 0)
         {
+            /*********************************************/
+            if (temp)
+            {
+                inode.reading_lock = 0;
+                FileSystem::Store_Inode(inode, file->f_inode_id);
+            }
+            /*********************************************/
             cout << "Current User Doesn't Have Permission To Read!" << endl;
             return 0;
         }
@@ -758,6 +854,13 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
         unsigned int free_file_size = inode.i_size - offset;
         if (length > free_file_size)
         {
+            /*********************************************/
+            if (temp)
+            {
+                inode.reading_lock = 0;
+                FileSystem::Store_Inode(inode, file->f_inode_id);
+            }
+            /*********************************************/
             cout << "Don't Try To Read More Than The File!" << endl;
             return 0;
         }
@@ -784,6 +887,20 @@ unsigned int FileManager::Read_File(vector<string> path, char *content, int leng
             offset += r_cnt_this_cycle;
             total_read_bytes += r_cnt_this_cycle;
         }
+
+        /*********************************************/
+        if (g_user.uid > 0 && g_user.uid < 10000)
+        {
+            string tmp;
+            getline(cin, tmp);
+            cout << "Reading Is Over" << endl
+                 << endl;
+            if (temp)
+            {
+                inode.reading_lock = 0;
+            }
+        }
+        /*********************************************/
 
         // Store the inode into disk
         FileSystem::Store_Inode(inode, file->f_inode_id);

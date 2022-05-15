@@ -3,6 +3,8 @@
 
 #include <ctime>
 
+typedef bool Mutex;
+
 // The number of pointers in inode
 static const unsigned int PTR_NUM = 10;
 // The number of direct pointers in inode
@@ -56,6 +58,9 @@ public:
     unsigned short i_gid; // The group which the owner belongs to
 
     time_t i_time; // last modified time
+
+    Mutex writing_lock;
+    Mutex reading_lock;
 
 public:
 

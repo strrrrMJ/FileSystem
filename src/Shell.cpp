@@ -176,6 +176,11 @@ void Shell::Func_Tree()
 
 void Shell::Func_Ls()
 {
+    /*************************************/
+    unsigned short temp = g_user.uid;
+    g_user.uid = 0;
+    /*************************************/
+
     if (args.size() == 1)
     {
         Inode inode;
@@ -297,6 +302,11 @@ void Shell::Func_Ls()
             cout << endl;
         }
     }
+
+    /*************************************/
+    g_user.uid = 0;
+    g_user.uid = temp;
+    /*************************************/
 }
 
 void Shell::Func_Exit()
